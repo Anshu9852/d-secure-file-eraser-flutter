@@ -23,6 +23,7 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
 
   OverlayEntry? _overlayEntry;
   final LayerLink _layerLink = LayerLink();
+  final ScrollController _scrollController = ScrollController();
 
   void _toggleDropdown() {
     if (_overlayEntry == null) {
@@ -41,6 +42,7 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
   @override
   void dispose() {
     _closeDropdown();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -99,8 +101,7 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
       ),
     );
   }
-
-  Widget _buildVolumeCard({
+Widget _buildVolumeCard({
     required String volumeId,
     required String title,
     required bool isBootVolume,
@@ -140,9 +141,9 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDFA),
+                    color: const Color(0xFFEDF3F2),
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: const Color(0xFF99F6E4)),
+                    border: Border.all(color: const Color(0xFFB8CCC8)),
                   ),
                   child: const Icon(
                     Icons.dns_rounded,
@@ -177,15 +178,6 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
                     ),
                   ),
                 ],
-                const Spacer(),
-                Text(
-                  percentageText,
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    color: Color(0xFF64748B),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -259,11 +251,24 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            const Padding(
-              padding: EdgeInsets.only(left: 36.0),
-              child: Text(
-                'Usage',
-                style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+            Padding(
+              padding: const EdgeInsets.only(left: 36.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Usage',
+                    style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+                  ),
+                  Text(
+                    percentageText,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 6),
@@ -284,8 +289,7 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
       ),
     );
   }
-
- void _showBootVolumeSafetyDialog() {
+void _showBootVolumeSafetyDialog() {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -411,7 +415,7 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 14.0),
-              color: Colors.white,
+              color: const Color(0xFFF1F5F9),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
@@ -419,7 +423,7 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
                     'Volume Eraser',
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.normal,
                       color: Color(0xFF0F172A),
                     ),
                   ),
@@ -434,17 +438,20 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
             Expanded(
               child: Container(
                 color: const Color(0xFFF1F5F9),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0),
-                  child: Column(
+                child: Scrollbar(
+                  controller: _scrollController,
+                  thumbVisibility: true,
+                  child: ListView(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 12.0),
                     children: [
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 14.0),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF0FDFA),
+                          color: const Color(0xFFEDF3F2),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFF99F6E4)),
+                          border: Border.all(color: const Color(0xFFB8CCC8)),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,66 +493,59 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Expanded(
-                        child: ListView(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          children: [
-                            _buildVolumeCard(
-                              volumeId: 'C:',
-                              title: 'System (C:)',
-                              isBootVolume: true,
-                              totalSize: '476.9 GB',
-                              usedSize: '381.6 GB',
-                              freeSize: '95.4 GB',
-                              usagePercentage: 0.80,
-                              percentageText: '80%',
-                            ),
-                            const SizedBox(height: 12),
-                            _buildVolumeCard(
-                              volumeId: 'D:',
-                              title: 'Work & Projects (D:)',
-                              isBootVolume: false,
-                              totalSize: '953.7 GB',
-                              usedSize: '476.8 GB',
-                              freeSize: '476.8 GB',
-                              usagePercentage: 0.50,
-                              percentageText: '50%',
-                            ),
-                            const SizedBox(height: 12),
-                            _buildVolumeCard(
-                              volumeId: 'E:',
-                              title: 'Media Library (E:)',
-                              isBootVolume: false,
-                              totalSize: '1.8 TB',
-                              usedSize: '1.0 TB',
-                              freeSize: '814.9 GB',
-                              usagePercentage: 0.56,
-                              percentageText: '56%',
-                            ),
-                            const SizedBox(height: 12),
-                            _buildVolumeCard(
-                              volumeId: 'F:',
-                              title: 'SanDisk USB (F:)',
-                              isBootVolume: false,
-                              totalSize: '59.6 GB',
-                              usedSize: '29.8 GB',
-                              freeSize: '29.8 GB',
-                              usagePercentage: 0.50,
-                              percentageText: '50%',
-                            ),
-                            const SizedBox(height: 12),
-                            _buildVolumeCard(
-                              volumeId: 'G:',
-                              title: 'Backup Drive (G:)',
-                              isBootVolume: false,
-                              totalSize: '3.6 TB',
-                              usedSize: '2.5 TB',
-                              freeSize: '1.1 TB',
-                              usagePercentage: 0.70,
-                              percentageText: '70%',
-                            ),
-                          ],
-                        ),
+_buildVolumeCard(
+                        volumeId: 'C:',
+                        title: 'System (C:)',
+                        isBootVolume: true,
+                        totalSize: '476.9 GB',
+                        usedSize: '381.6 GB',
+                        freeSize: '95.4 GB',
+                        usagePercentage: 0.80,
+                        percentageText: '80%',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildVolumeCard(
+                        volumeId: 'D:',
+                        title: 'Work & Projects (D:)',
+                        isBootVolume: false,
+                        totalSize: '953.7 GB',
+                        usedSize: '476.8 GB',
+                        freeSize: '476.8 GB',
+                        usagePercentage: 0.50,
+                        percentageText: '50%',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildVolumeCard(
+                        volumeId: 'E:',
+                        title: 'Media Library (E:)',
+                        isBootVolume: false,
+                        totalSize: '1.8 TB',
+                        usedSize: '1.0 TB',
+                        freeSize: '814.9 GB',
+                        usagePercentage: 0.56,
+                        percentageText: '56%',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildVolumeCard(
+                        volumeId: 'F:',
+                        title: 'SanDisk USB (F:)',
+                        isBootVolume: false,
+                        totalSize: '59.6 GB',
+                        usedSize: '29.8 GB',
+                        freeSize: '29.8 GB',
+                        usagePercentage: 0.50,
+                        percentageText: '50%',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildVolumeCard(
+                        volumeId: 'G:',
+                        title: 'Backup Drive (G:)',
+                        isBootVolume: false,
+                        totalSize: '3.6 TB',
+                        usedSize: '2.5 TB',
+                        freeSize: '1.1 TB',
+                        usagePercentage: 0.70,
+                        percentageText: '70%',
                       ),
                     ],
                   ),
@@ -649,7 +649,6 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
     );
   }
 }
-
 class _ConfirmEraserDialogContent extends StatefulWidget {
   final String selectedVolume;
 
@@ -1043,4 +1042,3 @@ class _HoverableMenuItemState extends State<_HoverableMenuItem> {
     );
   }
 }
-

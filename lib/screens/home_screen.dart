@@ -4,7 +4,9 @@ import '../widgets/sidebar.dart';
 import 'dashboard_screen.dart';
 import 'erase_files_screen.dart';
 import 'volume_eraser_screen.dart'; 
-import 'deleted_data_eraser_screen.dart'; // <-- Yeh import add kar diya gaya hai
+import 'deleted_data_eraser_screen.dart';
+import 'scheduler_screen.dart';
+import 'reports_screen.dart'; // Sirf yeh naya import add hua hai
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -61,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: IndexedStack(
                           index: selectedIndex,
                           children: [
+                            // Yahan Dashboard, Erase, Volume, Deleted, Scheduler waisa hi hai
                             DashboardScreen(
                               isDark: isDark,
                               onThemeToggle: _onThemeToggle,
@@ -74,9 +77,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             EraseFilesScreen(isDark: isDark),
                             const VolumeEraserScreen(), 
-                            const DeletedDataEraserScreen(), // <-- Yahan text ki jagah DeletedDataEraserScreen connect kar di gayi hai
-                            const Center(child: Text("Scheduler")),
-                            const Center(child: Text("Reports")),
+                            const DeletedDataEraserScreen(), 
+                            const SchedulerScreen(), 
+                            const ReportsScreen(), // Sirf yeh naya addition hai
                             const Center(child: Text("Cloud Erase")),
                             const Center(child: Text("Settings")),
                           ],
@@ -86,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                // Single, Clean & Fixed Professional Footer
+                // Single, Clean & Fixed Professional Footer (Sab waisa hi hai)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
                   decoration: BoxDecoration(
@@ -101,7 +104,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Left: Ready | Last operation
                       Row(
                         children: [
                           const Icon(Icons.check_circle_outline, size: 13, color: Colors.teal),
@@ -115,7 +117,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-                      // Right: Licensed with green styling matching reference
                       Row(
                         children: [
                           const Icon(Icons.shield_outlined, size: 13, color: Colors.teal),
