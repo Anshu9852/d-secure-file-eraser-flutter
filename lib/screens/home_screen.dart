@@ -6,25 +6,26 @@ import 'erase_files_screen.dart';
 import 'volume_eraser_screen.dart'; 
 import 'deleted_data_eraser_screen.dart';
 import 'scheduler_screen.dart';
-import 'reports_screen.dart'; // Sirf yeh naya import add hua hai
-
+import 'reports_screen.dart'; 
+import 'cloud_erase_screen.dart';
+ 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
+ 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
-
+ 
 class _HomeScreenState extends State<HomeScreen> {
   int selectedIndex = 0;
   bool isDark = false;
-
+ 
   void _onThemeToggle(bool val) {
     setState(() {
       isDark = val;
     });
   }
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             const DeletedDataEraserScreen(), 
                             const SchedulerScreen(), 
                             const ReportsScreen(), // Sirf yeh naya addition hai
-                            const Center(child: Text("Cloud Erase")),
+                            const CloudEraseScreen(), // Cloud Erase screen ab yahan wired hai
                             const Center(child: Text("Settings")),
                           ],
                         ),
@@ -88,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-
+ 
                 // Single, Clean & Fixed Professional Footer (Sab waisa hi hai)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
@@ -142,4 +143,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
+ 

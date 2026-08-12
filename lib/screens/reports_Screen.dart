@@ -39,6 +39,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Set<String> _selectedRows = {};
   String _selectedFilter = 'All Reports';
  
+  // [NEW - Column sorting] Which column header is currently active for
+  // sorting, and which direction. Sorting is applied ONLY inside the
+  // _filteredData getter below (on a freshly-built list each time) - the
+  // original _reportsData array is never touched, so switching sort
+  // columns (or clearing it) always starts fresh from the real data.
+  String? _sortColumn;
+  bool _sortAscending = true;
+ 
+  // [NEW - Toast notifications] Whether the toast stack is showing its
+  // full expanded list (one card per click) or the collapsed "peek stack"
+  // view (top card + faint cards behind it + a count badge).
+  bool _toastsExpanded = false;
+ 
   // [CHANGED - Date filter popups] The two header date buttons now hold real
   // selected dates instead of static placeholder text.
   DateTime? _startDate;
@@ -56,6 +69,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
   final Color _paleGreen = const Color(0xFFE8F5E9);
   final Color _lightGrey = const Color(0xFFF5F5F5);
  
+  // [NEW - Toast notification stack] Replaces the old single-SnackBar hack
+  // with a real stack of independent toast cards, so multiple messages
+  // (e.g. clicking Upload several times) can be visible at once, each with
+  // its own auto-dismiss timer and its own close (X) button - matching the
+  // reference screen recording where several "Starting upload process..."
+  // cards pile up together.
+  final List<_ToastItem> _toasts = [];
+  int _toastCounter = 0;
+ 
   // [CHANGED - Upload buttons] Tracks the picked file's name per upload
   // row (keyed by the row's label), so "No files selected" updates to
   // show what was actually picked from the native file browser.
@@ -71,7 +93,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   // selected date range and report-type dropdown, instead of always showing
   // the full static list.
   List<Map<String, dynamic>> get _filteredData {
-    return _reportsData.where((r) {
+    final List<Map<String, dynamic>> list = _reportsData.where((r) {
       if (_selectedFilter != 'All Reports' && r['type'] != _selectedFilter) {
         return false;
       }
@@ -87,6 +109,66 @@ class _ReportsScreenState extends State<ReportsScreen> {
       }
       return true;
     }).toList();
+ 
+    // [NEW - Column sorting] Sorts this freshly-built list only - never
+    // the original _reportsData - so the underlying 8 rows given at the
+    // start are never mutated, no matter how many times a column header
+    // is clicked or which column is sorted next.
+    if (_sortColumn != null) {
+      final String key = _sortKeyForColumn(_sortColumn!);
+      list.sort((a, b) {
+        int cmp;
+        if (key == 'date') {
+          cmp = _parseReportDate(a['date'] as String)
+              .compareTo(_parseReportDate(b['date'] as String));
+        } else {
+          final va = a[key];
+          final vb = b[key];
+          if (va is num && vb is num) {
+            cmp = va.compareTo(vb);
+          } else {
+            cmp = va.toString().toLowerCase().compareTo(vb.toString().toLowerCase());
+          }
+        }
+        return _sortAscending ? cmp : -cmp;
+      });
+    }
+    return list;
+  }
+ 
+  // [NEW - Column sorting] Maps a header's display title to the matching
+  // key in each row's data map.
+  String _sortKeyForColumn(String column) {
+    switch (column) {
+      case 'Report ID':
+        return 'id';
+      case 'Report Type':
+        return 'type';
+      case 'Total Items':
+        return 'total';
+      case 'Erased Items':
+        return 'erased';
+      case 'Failed Items':
+        return 'failed';
+      case 'Date':
+        return 'date';
+      default:
+        return 'id';
+    }
+  }
+ 
+  // [NEW - Column sorting] Clicking a header toggles ascending/descending
+  // if it's already the active column, or switches to that column
+  // (ascending first) otherwise.
+  void _toggleSort(String column) {
+    setState(() {
+      if (_sortColumn == column) {
+        _sortAscending = !_sortAscending;
+      } else {
+        _sortColumn = column;
+        _sortAscending = true;
+      }
+    });
   }
  
   bool get _isAllSelected =>
@@ -117,6 +199,195 @@ class _ReportsScreenState extends State<ReportsScreen> {
     _openOverlay = null;
   }
  
+  // [NEW - Toast notifications] Adds a new toast card to the TOP of the
+  // stack (newest first, matching the reference screenshots) and schedules
+  // it to auto-remove itself after `duration`. Returns nothing - callers
+  // don't need the id, _dismissToast (the X button) handles manual removal.
+  void _showToast(String message, {Duration duration = const Duration(seconds: 4)}) {
+    final String id = 'toast_${_toastCounter++}';
+    setState(() {
+      _toasts.insert(0, _ToastItem(id, message));
+    });
+    Future.delayed(duration, () {
+      if (mounted) {
+        setState(() {
+          _toasts.removeWhere((t) => t.id == id);
+          if (_toasts.isEmpty) _toastsExpanded = false;
+        });
+      }
+    });
+  }
+ 
+  // [NEW - Toast notifications] Manual removal, wired to each card's X
+  // icon - matches "cross wale icon pe click krne pe ek ek karke msg
+  // remove hota hai".
+  void _dismissToast(String id) {
+    setState(() {
+      _toasts.removeWhere((t) => t.id == id);
+      if (_toasts.isEmpty) _toastsExpanded = false;
+    });
+  }
+ 
+  // [NEW - Upload button] Wired to the footer "Upload" button.
+  // No rows selected -> a single "please select" toast.
+  // Rows selected -> a "Starting upload process..." toast right away,
+  // followed (after a short simulated delay) by an "Upload complete..."
+  // toast. Both stack independently, so clicking Upload repeatedly piles
+  // up multiple "Starting upload process..." cards exactly like the
+  // reference recording.
+  void _handleUploadReports() {
+    if (_selectedRows.isEmpty) {
+      _showToast("Please select report to upload");
+      return;
+    }
+    final int count = _selectedRows.length;
+    _showToast("Starting upload process...");
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        _showToast("Upload complete. Success: $count, Failed: 0");
+      }
+    });
+  }
+ 
+  // [NEW - Save PDF button] Wired to the footer "Save PDF" button.
+  // No rows selected -> a "please select" toast.
+  // Rows selected -> the "demo app" limitation toast, since this sandbox
+  // doesn't actually generate/download PDFs.
+  void _handleSavePdf() {
+    if (_selectedRows.isEmpty) {
+      _showToast("Please select at least one report to save");
+      return;
+    }
+    _showToast(
+      "This is a demo app, so full report downloads are not available in the web sandbox.",
+    );
+  }
+ 
+  // [NEW - Toast notifications] The stacked column of toast cards, newest
+  // on top. Rendered inside a Positioned widget anchored to the top-right
+  // of the whole page (see build()), so it sits above the "Report
+  // Settings" button regardless of what else is happening in the table.
+  // [CHANGED - Toast notifications] Collapsed by default: shows only the
+  // newest toast, with faint "peek" cards stacked behind it and a count
+  // badge if there's more than one - tapping it expands into the full
+  // list (see below). This is the "override ho ek hi msg pe, peeche
+  // dikhata jaaye, tap karne pe list ban jaaye" behaviour.
+  Widget _buildToastStack() {
+    if (_toasts.isEmpty) return const SizedBox.shrink();
+ 
+    if (!_toastsExpanded) {
+      final int peekCount = _toasts.length > 3 ? 3 : _toasts.length;
+      return GestureDetector(
+        onTap: () => setState(() => _toastsExpanded = true),
+        child: SizedBox(
+          width: 380,
+          height: 60 + (peekCount - 1) * 6.0,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              for (int i = peekCount - 1; i >= 1; i--)
+                Positioned(
+                  top: i * 6.0,
+                  left: i * 4.0,
+                  right: i * 4.0,
+                  child: Opacity(
+                    opacity: 1 - (i * 0.3),
+                    child: _buildToastCard(_toasts[i], interactive: false),
+                  ),
+                ),
+              _buildToastCard(
+                _toasts.first,
+                badgeCount: _toasts.length > 1 ? _toasts.length : null,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+ 
+    // [NEW - Expanded list view] Every click's message shown individually,
+    // newest on top, each with its own close (X). A small "Collapse" row
+    // on top folds it back into the peek-stack view.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        GestureDetector(
+          onTap: () => setState(() => _toastsExpanded = false),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6)],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Collapse", style: TextStyle(color: Colors.grey[700], fontSize: 12)),
+                const SizedBox(width: 4),
+                Icon(Icons.keyboard_arrow_up, size: 16, color: Colors.grey[700]),
+              ],
+            ),
+          ),
+        ),
+        ..._toasts.map((t) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _buildToastCard(t),
+            )),
+      ],
+    );
+  }
+ 
+  // [CHANGED - Toast notifications] Fixed width (was maxWidth-only before,
+  // so "Upload complete..." and "Starting upload process..." ended up
+  // different widths depending on their text length) - both message types
+  // now render at the exact same card width. `badgeCount` shows a small
+  // teal-green "+N" pill when this card is the top of a collapsed stack;
+  // `interactive` false is used for the faint peek cards behind it, which
+  // shouldn't have their own clickable close button.
+  Widget _buildToastCard(_ToastItem toast, {int? badgeCount, bool interactive = true}) {
+    return Material(
+      elevation: 4,
+      borderRadius: BorderRadius.circular(8),
+      color: Colors.white,
+      child: Container(
+        width: 380,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 10,
+              backgroundColor: _tealGreen,
+              child: const Icon(Icons.check, color: Colors.white, size: 14),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                toast.message,
+                style: const TextStyle(color: Colors.black, fontSize: 13),
+              ),
+            ),
+            const SizedBox(width: 10),
+            if (badgeCount != null && badgeCount > 1)
+              Container(
+                margin: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(color: _tealGreen, borderRadius: BorderRadius.circular(10)),
+                child: Text('+${badgeCount - 1}', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+              ),
+            if (interactive)
+              GestureDetector(
+                onTap: () => _dismissToast(toast.id),
+                child: Icon(Icons.close, size: 16, color: Colors.grey[600]),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+ 
   // [CHANGED - Preview button] Opens the report PDF in a NEW browser tab
   // (web) or the system's default browser (Windows desktop), matching the
   // reference screen recording. Requires at least one row's checkbox to
@@ -137,9 +408,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   // asks url_launcher to open it in the OS's default browser.
   void _openPreview() {
     if (_selectedRows.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select a report to preview")),
-      );
+      _showToast("Please select a report to preview");
       return;
     }
  
@@ -283,20 +552,42 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _lightGrey, // Page background
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildPageHeader(context),
-            const SizedBox(height: 20),
-            Expanded(
-              child: _buildMainTableContainer(),
+      // [CHANGED - Toast notifications] Body is now a Stack so the toast
+      // cards can float above everything else, anchored to the top-right
+      // corner of the page - i.e. directly above the "Report Settings"
+      // button, matching the reference screenshots.
+      // [CHANGED - Toast notifications] clipBehavior: Clip.none so the
+      // toast stack (now shifted to a negative top below) is allowed to
+      // render above the Stack's own top edge instead of being cut off.
+      body: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildPageHeader(context),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: _buildMainTableContainer(),
+                ),
+                const SizedBox(height: 16),
+                _buildFooterButtons(),
+              ],
             ),
-            const SizedBox(height: 16),
-            _buildFooterButtons(),
-          ],
-        ),
+          ),
+          // [NEW - Toast notifications] Positioned top-right corner.
+          // Shifted up (negative top) just enough that the toast stack
+          // floats above the "Report Settings" button instead of sitting
+          // directly on top of it, so the button peeks out and stays
+          // clickable underneath - everything else is untouched.
+          Positioned(
+            top: -34,
+            right: 24,
+            child: _buildToastStack(),
+          ),
+        ],
       ),
     );
   }
@@ -565,12 +856,26 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
  
   Widget _buildSortableHeader(String title) {
-    return Row(
-      children: [
-        Text(title, style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w600)),
-        const SizedBox(width: 4),
-        Icon(Icons.unfold_more, size: 14, color: Colors.grey[400]),
-      ],
+    // [NEW - Column sorting] Highlights the active sort column with a
+    // teal-green up/down arrow (matching direction); every other column
+    // keeps the neutral grey "unfold" icon.
+    final bool isActive = _sortColumn == title;
+    return InkWell(
+      onTap: () => _toggleSort(title),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(title, style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w600)),
+          const SizedBox(width: 4),
+          Icon(
+            isActive
+                ? (_sortAscending ? Icons.arrow_upward : Icons.arrow_downward)
+                : Icons.unfold_more,
+            size: 14,
+            color: isActive ? _tealGreen : Colors.grey[400],
+          ),
+        ],
+      ),
     );
   }
  
@@ -620,22 +925,67 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 ),
                 Expanded(
                   flex: 2,
-                  child: Row(
-                    children: [
-                      Icon(Icons.description_outlined, size: 13, color: Colors.grey[600]),
-                      const SizedBox(width: 6),
-                      Text(data['id'], style: TextStyle(color: Colors.grey[800], fontSize: 11)),
-                    ],
+                  child: Tooltip(
+                    message: data['id'].toString(),
+                    decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(4)),
+                    textStyle: const TextStyle(color: Colors.white, fontSize: 12),
+                    child: Row(
+                      children: [
+                        Icon(Icons.description_outlined, size: 13, color: Colors.grey[600]),
+                        const SizedBox(width: 6),
+                        Text(data['id'], style: TextStyle(color: Colors.grey[800], fontSize: 11)),
+                      ],
+                    ),
                   ),
                 ),
-                Expanded(flex: 2, child: Text(data['type'], style: TextStyle(color: Colors.grey[700], fontSize: 11))),
-                Expanded(flex: 1, child: Text(data['total'].toString(), style: TextStyle(color: Colors.grey[700], fontSize: 11))),
+                Expanded(
+                  flex: 2,
+                  child: Tooltip(
+                    message: data['type'].toString(),
+                    decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(4)),
+                    textStyle: const TextStyle(color: Colors.white, fontSize: 12),
+                    child: Text(data['type'], style: TextStyle(color: Colors.grey[700], fontSize: 11)),
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Tooltip(
+                    message: data['total'].toString(),
+                    decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(4)),
+                    textStyle: const TextStyle(color: Colors.white, fontSize: 12),
+                    child: Text(data['total'].toString(), style: TextStyle(color: Colors.grey[700], fontSize: 11)),
+                  ),
+                ),
                 // [CHANGED - Erased Items color] Now uses the app's
                 // teal-green accent color, and font weight is normal
                 // (not bold) to match the rest of the row's text.
-                Expanded(flex: 1, child: Text(data['erased'].toString(), style: TextStyle(color: _tealGreen, fontSize: 11, fontWeight: FontWeight.normal))),
-                Expanded(flex: 1, child: Text(failedItems.toString(), style: TextStyle(color: failedItems > 0 ? Colors.red : Colors.grey[700], fontSize: 11))),
-                Expanded(flex: 1, child: Text(data['date'], style: TextStyle(color: Colors.grey[700], fontSize: 11))),
+                Expanded(
+                  flex: 1,
+                  child: Tooltip(
+                    message: data['erased'].toString(),
+                    decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(4)),
+                    textStyle: const TextStyle(color: Colors.white, fontSize: 12),
+                    child: Text(data['erased'].toString(), style: TextStyle(color: _tealGreen, fontSize: 11, fontWeight: FontWeight.normal)),
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Tooltip(
+                    message: failedItems.toString(),
+                    decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(4)),
+                    textStyle: const TextStyle(color: Colors.white, fontSize: 12),
+                    child: Text(failedItems.toString(), style: TextStyle(color: failedItems > 0 ? Colors.red : Colors.grey[700], fontSize: 11)),
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Tooltip(
+                    message: data['date'].toString(),
+                    decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(4)),
+                    textStyle: const TextStyle(color: Colors.white, fontSize: 12),
+                    child: Text(data['date'], style: TextStyle(color: Colors.grey[700], fontSize: 11)),
+                  ),
+                ),
               ],
             ),
           ),
@@ -651,9 +1001,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
       children: [
         _HoverButton(text: "Preview", icon: Icons.remove_red_eye_outlined, fullTealHover: true, onTap: _openPreview),
         const SizedBox(width: 12),
-        _HoverButton(text: "Upload", icon: Icons.upload_file, fullTealHover: true),
+        _HoverButton(text: "Upload", icon: Icons.upload_file, fullTealHover: true, onTap: _handleUploadReports),
         const SizedBox(width: 12),
-        _HoverButton(text: "Save PDF", icon: Icons.picture_as_pdf_outlined, fullTealHover: true),
+        _HoverButton(text: "Save PDF", icon: Icons.picture_as_pdf_outlined, fullTealHover: true, onTap: _handleSavePdf),
       ],
     );
   }
@@ -712,37 +1062,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
               onPressed: () {
                 Navigator.pop(context);
-                // [CHANGED - Success toast] Rebuilt to match the reference
-                // screenshot: white card background, a small green circle
-                // with a white checkmark, and dark grey text — instead of
-                // the previous solid teal-green background. Same trigger
-                // (after Save Settings), same auto-dismiss, same top-right
-                // positioning as before.
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircleAvatar(
-                          radius: 10,
-                          backgroundColor: _tealGreen,
-                          child: const Icon(Icons.check, color: Colors.white, size: 14),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          "Settings saved successfully",
-                          style: TextStyle(color: Colors.grey[800], fontSize: 13),
-                        ),
-                      ],
-                    ),
-                    backgroundColor: Colors.white,
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    behavior: SnackBarBehavior.floating,
-                    margin: const EdgeInsets.only(bottom: 20, left: 500, right: 20), // Top right toast effect
-                    duration: const Duration(seconds: 3),
-                  ),
-                );
+                // [CHANGED - Success toast] Now uses the shared toast-stack
+                // system (_showToast) instead of a one-off SnackBar, so it
+                // renders in the exact same top-right spot, with the same
+                // look, as every other toast in this screen.
+                _showToast("Settings saved successfully");
               },
               child: const Text("Save Settings", style: TextStyle(color: Colors.white)),
             ),
@@ -1531,5 +1855,13 @@ class _TextLinkButtonState extends State<_TextLinkButton> {
       ),
     );
   }
+}
+ 
+// [NEW - Toast notifications] Plain data holder for one toast card: a
+// unique id (so a specific card can be dismissed) and its message text.
+class _ToastItem {
+  final String id;
+  final String message;
+  _ToastItem(this.id, this.message);
 }
  
