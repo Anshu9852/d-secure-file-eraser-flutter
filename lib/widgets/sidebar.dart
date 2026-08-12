@@ -1,27 +1,34 @@
 import 'package:flutter/material.dart';
 import '../theme/theme.dart';
-
+ 
 class Sidebar extends StatefulWidget {
   final int selectedIndex;
   final Function(int) onItemSelected;
   final bool isDark;
-
+ 
   const Sidebar({
     super.key,
     required this.selectedIndex,
     required this.onItemSelected,
     required this.isDark,
   });
-
+ 
   @override
   State<Sidebar> createState() => _SidebarState();
 }
-
+ 
 class _SidebarState extends State<Sidebar> {
   int? hoveredIndex;
   bool isCollapsed = false;
   bool isBottomBtnHovered = false;
-
+ 
+  // ---- Custom grey palette (as per requirement) ----
+  static const Color sidebarGreyBg = Color(0xFFF7F7F8); // light grey-white
+  static const Color sidebarGreyText = Color(0xFF3A3A3A);
+  static const Color sidebarGreyBorder = Color(0xFFD5D5D5); // lighter grey line
+  static const Color sidebarHoverBg = Color(0xFFE3E8EE); // light grey-blue hover
+  static const Color sidebarSelectedBg = Color(0xFFD6DFE7); // light blue-grey selected
+ 
   final List<Map<String, dynamic>> menuItems = const [
     {'icon': Icons.grid_view_rounded, 'title': 'Dashboard'},
     {'icon': Icons.description_outlined, 'title': 'Erase Files & Folder'},
@@ -32,20 +39,20 @@ class _SidebarState extends State<Sidebar> {
     {'icon': Icons.cloud_outlined, 'title': 'Cloud Erase'},
     {'icon': Icons.settings_outlined, 'title': 'Settings'},
   ];
-
+ 
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      width: isCollapsed ? 64 : 220,
+      // Width increased so text doesn't get cut
+      width: isCollapsed ? 56 : 210,
       decoration: BoxDecoration(
-        color: widget.isDark ? AppColors.darkCard : AppColors.lightCard,
-        // Straight right divider
+        color: sidebarGreyBg,
+        // Straight right divider (touches header till footer)
         border: Border(
           right: BorderSide(
-            color: widget.isDark
-                ? AppColors.darkBorder
-                : AppColors.lightBorder,
+            color: sidebarGreyBorder,
+            width: 1.2,
           ),
         ),
       ),
@@ -55,13 +62,11 @@ class _SidebarState extends State<Sidebar> {
           // Top divider (Header ke niche touch karega)
           Container(
             height: 1,
-            color: widget.isDark
-                ? AppColors.darkBorder
-                : AppColors.lightBorder,
+            color: sidebarGreyBorder,
           ),
-
+ 
           const SizedBox(height: 10),
-
+ 
           Expanded(
             child: ListView.builder(
               padding: EdgeInsets.zero,
@@ -76,7 +81,7 @@ class _SidebarState extends State<Sidebar> {
               },
             ),
           ),
-
+ 
           // Collapse Button
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -108,9 +113,7 @@ class _SidebarState extends State<Sidebar> {
                       size: 18,
                       color: isBottomBtnHovered
                           ? Colors.white
-                          : (widget.isDark
-                              ? AppColors.darkGreyText
-                              : AppColors.lightGreyText),
+                          : sidebarGreyText,
                     ),
                   ),
                 ),
@@ -121,7 +124,7 @@ class _SidebarState extends State<Sidebar> {
       ),
     );
   }
-
+ 
   Widget _buildMenuItem(
     IconData icon,
     String title,
@@ -129,19 +132,27 @@ class _SidebarState extends State<Sidebar> {
     int index,
   ) {
     bool isHovered = hoveredIndex == index;
+ 
+    // Selected ho toh selected color, warna hover pe hover color, warna transparent
+    Color bgColor;
+    if (isSelected) {
+      bgColor = sidebarSelectedBg;
+    } else if (isHovered) {
+      bgColor = sidebarHoverBg;
+    } else {
+      bgColor = Colors.transparent;
+    }
+ 
     bool isHighlighted = isSelected || isHovered;
-
+ 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      // Right side thoda extra padding taaki text/border ke beech gap rahe
+      padding: const EdgeInsets.only(left: 8, right: 12, top: 2, bottom: 2),
       child: MouseRegion(
         onEnter: (_) => setState(() => hoveredIndex = index),
         onExit: (_) => setState(() => hoveredIndex = null),
         child: Material(
-          color: isHighlighted
-              ? (widget.isDark
-                  ? AppColors.primaryTeal.withOpacity(0.30)
-                  : const Color(0xFFE0F2FE))
-              : Colors.transparent,
+          color: bgColor,
           borderRadius: BorderRadius.circular(8),
           child: InkWell(
             borderRadius: BorderRadius.circular(8),
@@ -158,9 +169,7 @@ class _SidebarState extends State<Sidebar> {
                     size: 18,
                     color: isHighlighted
                         ? AppColors.primaryTeal
-                        : (widget.isDark
-                            ? AppColors.darkGreyText
-                            : AppColors.lightGreyText),
+                        : sidebarGreyText,
                   ),
                   if (!isCollapsed) ...[
                     const SizedBox(width: 10),
@@ -175,9 +184,7 @@ class _SidebarState extends State<Sidebar> {
                               : FontWeight.normal,
                           color: isHighlighted
                               ? AppColors.primaryTeal
-                              : (widget.isDark
-                                  ? AppColors.darkText
-                                  : AppColors.lightText),
+                              : sidebarGreyText,
                         ),
                       ),
                     ),
@@ -191,4 +198,4 @@ class _SidebarState extends State<Sidebar> {
     );
   }
 }
-
+ 

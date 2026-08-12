@@ -1,30 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/theme.dart';
-
+ 
 class Header extends StatefulWidget {
   final bool isDark;
   const Header({super.key, required this.isDark});
-
+ 
   @override
   State<Header> createState() => _HeaderState();
 }
-
+ 
 class _HeaderState extends State<Header> {
   int? hoveredIconIndex;
-
+ 
   @override
   Widget build(BuildContext context) {
     Color textColor = widget.isDark ? AppColors.darkText : AppColors.lightText;
     Color iconColor = widget.isDark ? AppColors.darkGreyText : AppColors.lightGreyText;
-
+ 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       decoration: BoxDecoration(
         color: widget.isDark ? AppColors.darkCard : AppColors.lightCard,
-        border: Border(
+        border: const Border(
           bottom: BorderSide(
-            color: widget.isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            color: Color(0xFFD5D5D5), // grey line, matches sidebar divider
           ),
         ),
       ),
@@ -37,16 +37,16 @@ class _HeaderState extends State<Header> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
           ),
           const SizedBox(width: 20),
-
+ 
           // Icons
           _buildHeaderIcon(0, Icons.info_outline, "Info", iconColor),
           _buildHeaderIcon(1, Icons.tune, "Settings", iconColor),
           _buildHeaderIcon(2, Icons.file_download_outlined, "Download", iconColor),
           _buildHeaderIcon(3, Icons.vpn_key_outlined, "Activation", iconColor),
           _buildHeaderIcon(4, Icons.menu_book_outlined, "Documentation", iconColor),
-
+ 
           const Spacer(),
-
+ 
           // Purchase Icon
           _buildHeaderIcon(
             5,
@@ -59,7 +59,7 @@ class _HeaderState extends State<Header> {
       ),
     );
   }
-
+ 
   Widget _buildHeaderIcon(int index, IconData icon, String tooltip, Color defaultColor, {VoidCallback? onTap}) {
     bool isHovered = hoveredIconIndex == index;
     return Tooltip(
@@ -83,7 +83,7 @@ class _HeaderState extends State<Header> {
       ),
     );
   }
-
+ 
   // --- Dialog Logic ---
   void _showPurchaseDialog(BuildContext context) {
     showDialog(
@@ -134,7 +134,7 @@ class _HeaderState extends State<Header> {
       },
     );
   }
-
+ 
   Future<void> _launchStoreWebsite() async {
     final uri = Uri.parse('https://dsecuretech.com/pricing-and-plan?product=file-eraser');
     if (await canLaunchUrl(uri)) {
@@ -142,7 +142,7 @@ class _HeaderState extends State<Header> {
     }
   }
 }
-
+ 
 // --- Helper Classes ---
 class _DialogCloseIcon extends StatefulWidget {
   final VoidCallback onTap;
@@ -150,7 +150,7 @@ class _DialogCloseIcon extends StatefulWidget {
   @override
   State<_DialogCloseIcon> createState() => _DialogCloseIconState();
 }
-
+ 
 class _DialogCloseIconState extends State<_DialogCloseIcon> {
   bool hovered = false;
   @override
@@ -170,7 +170,7 @@ class _DialogCloseIconState extends State<_DialogCloseIcon> {
     );
   }
 }
-
+ 
 class _PurchaseCancelButton extends StatefulWidget {
   final bool isDark;
   final VoidCallback onTap;
@@ -178,14 +178,14 @@ class _PurchaseCancelButton extends StatefulWidget {
   @override
   State<_PurchaseCancelButton> createState() => _PurchaseCancelButtonState();
 }
-
+ 
 class _PurchaseCancelButtonState extends State<_PurchaseCancelButton> {
   bool hovered = false;
   @override
   Widget build(BuildContext context) {
     Color textColor = widget.isDark ? AppColors.darkText : AppColors.lightText;
     Color borderColor = widget.isDark ? AppColors.darkBorder : AppColors.lightBorder;
-
+ 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => hovered = true),
@@ -216,14 +216,14 @@ class _PurchaseCancelButtonState extends State<_PurchaseCancelButton> {
     );
   }
 }
-
+ 
 class _PurchaseVisitStoreButton extends StatefulWidget {
   final VoidCallback onTap;
   const _PurchaseVisitStoreButton({required this.onTap});
   @override
   State<_PurchaseVisitStoreButton> createState() => _PurchaseVisitStoreButtonState();
 }
-
+ 
 class _PurchaseVisitStoreButtonState extends State<_PurchaseVisitStoreButton> {
   bool hovered = false;
   @override
@@ -250,4 +250,4 @@ class _PurchaseVisitStoreButtonState extends State<_PurchaseVisitStoreButton> {
     );
   }
 }
-
+ 
