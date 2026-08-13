@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               children: [
                 Header(isDark: isDark),
-                
+ 
                 // Content area (Changes dynamically based on sidebar/cards)
                 Expanded(
                   child: Row(
@@ -95,9 +95,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                    border: Border(
+                    border: const Border(
                       top: BorderSide(
-                        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                        color: Color(0xFFD5D5D5), // grey line, matches header/sidebar divider
                         width: 1,
                       ),
                     ),
