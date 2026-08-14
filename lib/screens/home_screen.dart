@@ -8,6 +8,7 @@ import 'deleted_data_eraser_screen.dart';
 import 'scheduler_screen.dart';
 import 'reports_screen.dart'; 
 import 'cloud_erase_screen.dart';
+import 'settings_screen.dart';
  
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -82,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SchedulerScreen(), 
                             const ReportsScreen(), // Sirf yeh naya addition hai
                             const CloudEraseScreen(), // Cloud Erase screen ab yahan wired hai
-                            const Center(child: Text("Settings")),
+                            SettingsScreen(isDark: isDark), // Naya Settings screen yahan wired hai
                           ],
                         ),
                       ),
