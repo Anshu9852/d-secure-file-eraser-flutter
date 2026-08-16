@@ -55,7 +55,7 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
     eraseController.dispose();
     super.dispose();
   }
-
+ 
  void _addFiles() {
     setState(() {
       fileItems.addAll([
@@ -142,7 +142,7 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
       selectedIndexes.clear();
     });
   }
-
+ 
  void _toggleDropdown() {
     if (_dropdownOverlay != null) {
       _closeDropdown();
@@ -305,6 +305,7 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
                     TextField(
                       controller: eraseController,
                       onChanged: (_) => setDialogState(() {}),
+                      cursorColor: AppColors.primaryTeal,
                       style: const TextStyle(
                         color: AppColors.activeGreenText,
                         fontWeight: FontWeight.w600,
@@ -316,7 +317,10 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                         contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                        filled: true,
+                        fillColor: Colors.transparent,
+                        hoverColor: const Color(0xFFDCE9F5),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(6),
                           borderSide: const BorderSide(
@@ -370,10 +374,10 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
       },
     );
   }
-
+ 
 @override
   Widget build(BuildContext context) {
-    Color bgColor = widget.isDark ? AppColors.darkBg : AppColors.lightBg;
+    Color bgColor = widget.isDark ? AppColors.darkBg : const Color(0xFFF3F4F6);
     Color cardBg = widget.isDark ? AppColors.darkCard : AppColors.lightCard;
     Color textColor = widget.isDark ? AppColors.darkText : AppColors.lightText;
     Color subTextColor =
@@ -394,7 +398,7 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
               children: [
                 Text('Erase Files & Folders',
                     style: TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
+                        fontSize: 20, fontWeight: FontWeight.normal, color: textColor)),
                 const SizedBox(height: 2),
                 Text('Permanently and securely delete sensitive files',
                     style: TextStyle(fontSize: 12, color: subTextColor)),
@@ -480,7 +484,7 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
       ),
     );
   }
-
+ 
 Widget _uploadBox(Color textColor, Color subTextColor, Color borderColor) {
     return CustomPaint(
       painter: _DashedBorderPainter(color: borderColor),
@@ -524,7 +528,7 @@ Widget _uploadBox(Color textColor, Color subTextColor, Color borderColor) {
  
   Widget _fileTable(Color cardBg, Color textColor, Color subTextColor, Color borderColor) {
     final dividerColor = widget.isDark ? Colors.white24 : Colors.grey.shade300;
-
+ 
     return Container(
       decoration: BoxDecoration(
         color: cardBg,
@@ -654,7 +658,7 @@ Widget _uploadBox(Color textColor, Color subTextColor, Color borderColor) {
     );
   }
  
-  Widget _thCell(String label, Color color, {bool alignRight = false}) => Padding(
+Widget _thCell(String label, Color color, {bool alignRight = false}) => Padding(
         padding: EdgeInsets.only(
           top: 6,
           bottom: 6,
@@ -700,7 +704,7 @@ Widget _uploadBox(Color textColor, Color subTextColor, Color borderColor) {
         ),
       );
 }
-
+ 
 class _DashedBorderPainter extends CustomPainter {
   final Color color;
   _DashedBorderPainter({required this.color});
@@ -836,34 +840,39 @@ class _LightGreenHoverButton extends StatefulWidget {
  
 class _LightGreenHoverButtonState extends State<_LightGreenHoverButton> {
   bool hovered = false;
+  bool pressed = false;
+ 
+  static const Color _paleBlueBg = Color(0xFFDCE9F5);
  
   @override
   Widget build(BuildContext context) {
+    final Color bgColor = (pressed || hovered) ? _paleBlueBg : Colors.transparent;
+    const Color fgColor = AppColors.lightGreyText;
+ 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => hovered = true),
       onExit: (_) => setState(() => hovered = false),
       child: GestureDetector(
-        onTap: widget.onTap,
+        onTapDown: (_) => setState(() => pressed = true),
+        onTapCancel: () => setState(() => pressed = false),
+        onTapUp: (_) {
+          setState(() => pressed = false);
+          widget.onTap();
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: hovered ? AppColors.activeGreenBg : Colors.transparent,
+            color: bgColor,
             borderRadius: BorderRadius.circular(6),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(widget.icon,
-                  size: 15,
-                  color: hovered ? AppColors.activeGreenText : AppColors.lightGreyText),
+              Icon(widget.icon, size: 15, color: fgColor),
               const SizedBox(width: 4),
-              Text(widget.label,
-                  style: TextStyle(
-                      fontSize: 12,
-                      color:
-                          hovered ? AppColors.activeGreenText : AppColors.lightGreyText)),
+              Text(widget.label, style: TextStyle(fontSize: 12, color: fgColor)),
             ],
           ),
         ),
@@ -989,4 +998,4 @@ class _ConfirmButton extends StatelessWidget {
     );
   }
 }
-
+ 

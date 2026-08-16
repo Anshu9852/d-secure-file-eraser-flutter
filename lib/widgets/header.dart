@@ -108,7 +108,7 @@ class _HeaderState extends State<Header> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: Container(
             width: 460,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,19 +127,19 @@ class _HeaderState extends State<Header> {
                     _DialogCloseIcon(onTap: () => Navigator.pop(dialogCtx)),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 18),
                 Text('Version', style: TextStyle(fontSize: 12, color: subTextColor)),
-                const SizedBox(height: 1),
+                const SizedBox(height: 3),
                 Text('Edition Version 1.1 File Eraser', style: TextStyle(fontSize: 14, color: textColor)),
-                const SizedBox(height: 10),
-                Text('Build', style: TextStyle(fontSize: 12, color: subTextColor)),
-                const SizedBox(height: 1),
-                Text('1.1.2026.08.16', style: TextStyle(fontSize: 14, color: textColor)),
                 const SizedBox(height: 14),
+                Text('Build', style: TextStyle(fontSize: 12, color: subTextColor)),
+                const SizedBox(height: 3),
+                Text('1.1.2026.08.16', style: TextStyle(fontSize: 14, color: textColor)),
+                const SizedBox(height: 16),
                 Divider(color: widget.isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
                 Text('System Information', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textColor)),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 _infoRow('Processor', 'Intel Core i9-13900K @ 3.0GHz', subTextColor, textColor),
                 _infoRow('Memory', '32 GB', subTextColor, textColor),
                 _infoRow('OS Version', 'Windows 11 Pro (Web Demo)', subTextColor, textColor),
@@ -153,7 +153,7 @@ class _HeaderState extends State<Header> {
                     style: TextStyle(fontSize: 11, color: subTextColor),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 18),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -223,6 +223,7 @@ class _HeaderState extends State<Header> {
                   borderColor: borderColor,
                   textColor: textColor,
                   subTextColor: subTextColor,
+                  onTap: () => _launchExternalUrl('https://dsecuretech.com/support/knowledge-base'),
                 ),
                 const SizedBox(height: 10),
                 _SupportOptionBox(
@@ -232,6 +233,7 @@ class _HeaderState extends State<Header> {
                   borderColor: borderColor,
                   textColor: textColor,
                   subTextColor: subTextColor,
+                  onTap: () => _launchExternalUrl('mailto:support@dsecuretech.com'),
                 ),
                 const SizedBox(height: 10),
                 _SupportOptionBox(
@@ -267,16 +269,6 @@ class _HeaderState extends State<Header> {
     );
   }
  
-  // --- Activation Dialog ---
-  void _showActivationDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogCtx) {
-        return _ActivationDialog(isDark: widget.isDark, outerContext: context);
-      },
-    );
-  }
- 
   // --- Help Manual Dialog ---
   void _showHelpManualDialog(BuildContext context) {
     Color subTextColor = widget.isDark ? AppColors.darkGreyText : AppColors.lightGreyText;
@@ -289,7 +281,7 @@ class _HeaderState extends State<Header> {
           backgroundColor: popupBg,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: Container(
-            width: 460,
+            width: 440,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -313,28 +305,26 @@ class _HeaderState extends State<Header> {
                   style: TextStyle(fontSize: 12, color: subTextColor),
                 ),
                 const SizedBox(height: 28),
-                Center(
-                  child: Icon(Icons.open_in_new, size: 40, color: subTextColor),
-                ),
-                const SizedBox(height: 22),
+                Center(child: Icon(Icons.open_in_new, size: 40, color: subTextColor)),
+                const SizedBox(height: 28),
                 Center(
                   child: Text(
                     'The complete user manual contains detailed instructions for all features',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: subTextColor),
+                    style: TextStyle(fontSize: 13, height: 1.4, color: subTextColor),
                   ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     _ActivationCancelButton(isDark: widget.isDark, onTap: () => Navigator.pop(dialogCtx)),
                     const SizedBox(width: 12),
-                    _TealRectButton(
+                    _PurchaseVisitStoreButton(
                       label: 'Open Manual',
                       onTap: () {
                         Navigator.pop(dialogCtx);
-                        _openUserManual();
+                        _launchHelpManual();
                       },
                     ),
                   ],
@@ -347,19 +337,39 @@ class _HeaderState extends State<Header> {
     );
   }
  
-  Future<void> _openUserManual() async {
-    final uri = Uri.parse('https://dsecuretech.com/manual');
+  Future<void> _launchExternalUrl(String urlOrMailto) async {
+    final uri = Uri.parse(urlOrMailto);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, webOnlyWindowName: '_blank');
     }
   }
  
-  // --- Purchase Dialog (unchanged) ---
+  Future<void> _launchHelpManual() async {
+    final uri = Uri.parse('https://dsecuretech.com/help-manual');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, webOnlyWindowName: '_blank');
+    }
+  }
+ 
+  // --- Activation Dialog ---
+  void _showActivationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return _ActivationDialog(isDark: widget.isDark, hostContext: context);
+      },
+    );
+  }
+ 
+  // --- Purchase Dialog ---
   void _showPurchaseDialog(BuildContext context) {
+    Color popupBg = widget.isDark ? AppColors.darkBg : AppColors.lightBg;
+ 
     showDialog(
       context: context,
       builder: (dialogCtx) {
         return Dialog(
+          backgroundColor: popupBg,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: Container(
             width: 440,
@@ -371,7 +381,16 @@ class _HeaderState extends State<Header> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Expanded(child: Text('Purchase D-Secure', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+                    Expanded(
+                      child: Text(
+                        'Purchase D-Secure',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: widget.isDark ? AppColors.darkText : AppColors.lightText,
+                        ),
+                      ),
+                    ),
                     _DialogCloseIcon(onTap: () => Navigator.pop(dialogCtx)),
                   ],
                 ),
@@ -453,6 +472,7 @@ class _PurchaseCancelButtonState extends State<_PurchaseCancelButton> {
   @override
   Widget build(BuildContext context) {
     Color textColor = widget.isDark ? AppColors.darkText : AppColors.lightText;
+    Color greyBg = widget.isDark ? AppColors.darkBg : AppColors.lightBg;
     Color borderColor = widget.isDark ? AppColors.darkBorder : AppColors.lightBorder;
  
     return MouseRegion(
@@ -463,12 +483,12 @@ class _PurchaseCancelButtonState extends State<_PurchaseCancelButton> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           decoration: BoxDecoration(
-            color: hovered ? const Color(0xFF4DB6AC) : Colors.white,
-            borderRadius: BorderRadius.circular(6),
+            color: hovered ? AppColors.primaryTeal : greyBg,
+            borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: hovered ? const Color(0xFF26A69A) : borderColor,
+              color: hovered ? AppColors.primaryTeal : borderColor,
               width: 1.0,
             ),
           ),
@@ -488,7 +508,8 @@ class _PurchaseCancelButtonState extends State<_PurchaseCancelButton> {
  
 class _PurchaseVisitStoreButton extends StatefulWidget {
   final VoidCallback onTap;
-  const _PurchaseVisitStoreButton({required this.onTap});
+  final String label;
+  const _PurchaseVisitStoreButton({required this.onTap, this.label = 'Visit Store'});
   @override
   State<_PurchaseVisitStoreButton> createState() => _PurchaseVisitStoreButtonState();
 }
@@ -510,9 +531,9 @@ class _PurchaseVisitStoreButtonState extends State<_PurchaseVisitStoreButton> {
             color: hovered ? const Color(0xFF0B7A70) : AppColors.primaryTeal,
             borderRadius: BorderRadius.circular(6),
           ),
-          child: const Text(
-            'Visit Store',
-            style: TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600),
+          child: Text(
+            widget.label,
+            style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600),
           ),
         ),
       ),
@@ -528,6 +549,7 @@ class _SupportOptionBox extends StatefulWidget {
   final Color borderColor;
   final Color textColor;
   final Color subTextColor;
+  final VoidCallback? onTap;
   const _SupportOptionBox({
     required this.title,
     required this.subtitle,
@@ -535,6 +557,7 @@ class _SupportOptionBox extends StatefulWidget {
     required this.borderColor,
     required this.textColor,
     required this.subTextColor,
+    this.onTap,
   });
  
   @override
@@ -549,32 +572,35 @@ class _SupportOptionBoxState extends State<_SupportOptionBox> {
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => hovered = true),
       onExit: (_) => setState(() => hovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: widget.cardBg,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: hovered ? AppColors.primaryTeal : widget.borderColor,
-            width: hovered ? 1.5 : 1.0,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: widget.cardBg,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: hovered ? AppColors.primaryTeal : widget.borderColor,
+              width: hovered ? 1.5 : 1.0,
+            ),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: widget.textColor)),
-            const SizedBox(height: 3),
-            Text(widget.subtitle, style: TextStyle(fontSize: 11, color: widget.subTextColor)),
-          ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: widget.textColor)),
+              const SizedBox(height: 3),
+              Text(widget.subtitle, style: TextStyle(fontSize: 11, color: widget.subTextColor)),
+            ],
+          ),
         ),
       ),
     );
   }
 }
  
-// --- Teal "Close" button (used in Info & Support dialogs) ---
+// --- Grey "Close" button that turns teal on hover (used in Info & Support dialogs) ---
 class _TealCloseButton extends StatefulWidget {
   final bool isDark;
   final VoidCallback onTap;
@@ -599,9 +625,8 @@ class _TealCloseButtonState extends State<_TealCloseButton> {
           decoration: BoxDecoration(
             color: hovered ? const Color(0xFF0B7A70) : AppColors.primaryTeal,
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: hovered ? const Color(0xFF0B7A70) : AppColors.primaryTeal, width: 1.0),
           ),
-          child: const Text(
+          child: Text(
             'Close',
             style: TextStyle(
               fontSize: 13,
@@ -685,42 +710,6 @@ class _TealActionButtonState extends State<_TealActionButton> {
           decoration: BoxDecoration(
             color: hovered ? const Color(0xFF0B7A70) : AppColors.primaryTeal,
             borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            widget.label,
-            style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600),
-          ),
-        ),
-      ),
-    );
-  }
-}
- 
-// --- Teal rectangle button with custom label (Open Manual) ---
-class _TealRectButton extends StatefulWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _TealRectButton({required this.label, required this.onTap});
-  @override
-  State<_TealRectButton> createState() => _TealRectButtonState();
-}
- 
-class _TealRectButtonState extends State<_TealRectButton> {
-  bool hovered = false;
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => hovered = true),
-      onExit: (_) => setState(() => hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-          decoration: BoxDecoration(
-            color: hovered ? const Color(0xFF0B7A70) : AppColors.primaryTeal,
-            borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
             widget.label,
@@ -839,7 +828,7 @@ class _SoftwareUpdateDialogState extends State<_SoftwareUpdateDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Container(
         width: 460,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -853,7 +842,7 @@ class _SoftwareUpdateDialogState extends State<_SoftwareUpdateDialog> {
                 _DialogCloseIcon(onTap: () => Navigator.pop(context)),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text('Check for the latest version', style: TextStyle(fontSize: 12, color: subTextColor)),
             const SizedBox(height: 28),
             _buildStageContent(textColor, subTextColor),
@@ -878,7 +867,7 @@ class _SoftwareUpdateDialogState extends State<_SoftwareUpdateDialog> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(Icons.file_download_outlined, size: 40, color: AppColors.primaryTeal),
+              const Icon(Icons.file_download_outlined, size: 40, color: Colors.grey),
               const SizedBox(height: 12),
               Text('Current version: 4.2.1', style: TextStyle(fontSize: 12, color: subTextColor)),
               const SizedBox(height: 16),
@@ -893,9 +882,11 @@ class _SoftwareUpdateDialogState extends State<_SoftwareUpdateDialog> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              const SizedBox(height: 16),
               Icon(Icons.file_download_outlined, size: 40, color: AppColors.primaryTeal),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Text('Checking for updates...', style: TextStyle(fontSize: 13, color: subTextColor)),
+              const SizedBox(height: 16),
             ],
           ),
         );
@@ -1005,8 +996,8 @@ enum _ActivationTab { cloud, key, offline }
  
 class _ActivationDialog extends StatefulWidget {
   final bool isDark;
-  final BuildContext outerContext;
-  const _ActivationDialog({required this.isDark, required this.outerContext});
+  final BuildContext hostContext;
+  const _ActivationDialog({required this.isDark, required this.hostContext});
  
   @override
   State<_ActivationDialog> createState() => _ActivationDialogState();
@@ -1029,6 +1020,7 @@ class _ActivationDialogState extends State<_ActivationDialog> {
   // Offline state
   final TextEditingController offlineCodeCtrl = TextEditingController();
   final String machineCode = 'DSEC-OFFLINE-SANDBOX-2026';
+  bool offlineActivated = false;
  
   @override
   void initState() {
@@ -1083,12 +1075,13 @@ class _ActivationDialogState extends State<_ActivationDialog> {
  
   void _onCopyMachineCode() {
     Clipboard.setData(ClipboardData(text: machineCode));
-    ScaffoldMessenger.of(widget.outerContext).hideCurrentSnackBar();
-    ScaffoldMessenger.of(widget.outerContext).showSnackBar(
+    ScaffoldMessenger.of(widget.hostContext).hideCurrentSnackBar();
+    ScaffoldMessenger.of(widget.hostContext).showSnackBar(
       SnackBar(
         content: const Text(
-          'Machine code copied!',
-          style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+          'Machine code copied',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
         ),
         backgroundColor: Colors.black,
         behavior: SnackBarBehavior.fixed,
@@ -1282,11 +1275,15 @@ class _ActivationDialogState extends State<_ActivationDialog> {
           minLines: 5,
           maxLines: 6,
         ),
+        if (offlineActivated) ...[
+          const SizedBox(height: 14),
+          _activationMessageBox(isError: false, text: 'Activation successful!'),
+        ],
         const SizedBox(height: 16),
         _TealFullWidthButton(
           icon: Icons.vpn_key_outlined,
           label: 'Activate Offline',
-          onTap: offlineFilled ? () {} : () {},
+          onTap: offlineFilled ? () => setState(() => offlineActivated = true) : () {},
           disabled: !offlineFilled,
         ),
       ],
@@ -1336,15 +1333,15 @@ class _ActivationTabBarState extends State<_ActivationTabBar> {
   @override
   Widget build(BuildContext context) {
     Color trackBg = widget.isDark ? AppColors.darkBg : AppColors.lightBg;
-    Color textColor = widget.isDark ? AppColors.darkText : AppColors.lightText;
+    Color selectedTextColor = widget.isDark ? AppColors.darkText : AppColors.lightText;
+    Color unselectedTextColor = widget.isDark ? AppColors.darkGreyText : AppColors.lightGreyText;
     Color hoverBg = widget.isDark ? Colors.white24 : const Color(0xFFDADADA);
  
     return Container(
-      width: double.infinity,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(color: trackBg, borderRadius: BorderRadius.circular(8)),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.min,
         children: List.generate(widget.labels.length, (i) {
           bool selected = widget.selectedIndex == i;
           bool hovered = hoveredIndex == i;
@@ -1357,7 +1354,7 @@ class _ActivationTabBarState extends State<_ActivationTabBar> {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 120),
                 margin: const EdgeInsets.symmetric(horizontal: 2),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 14),
                 decoration: BoxDecoration(
                   color: selected ? Colors.white : (hovered ? hoverBg : Colors.transparent),
                   borderRadius: BorderRadius.circular(6),
@@ -1365,7 +1362,11 @@ class _ActivationTabBarState extends State<_ActivationTabBar> {
                 child: Text(
                   widget.labels[i],
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textColor),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: selected ? selectedTextColor : unselectedTextColor,
+                  ),
                 ),
               ),
             ),
@@ -1414,6 +1415,7 @@ class _ActivationTextFieldState extends State<_ActivationTextField> {
       obscureText: widget.obscureText,
       minLines: widget.minLines,
       maxLines: widget.maxLines,
+      cursorColor: AppColors.primaryTeal,
       style: TextStyle(fontSize: 13, color: textColor),
       decoration: InputDecoration(
         hintText: widget.hint,

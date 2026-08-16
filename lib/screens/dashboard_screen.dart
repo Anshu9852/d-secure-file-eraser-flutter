@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 import '../theme/theme.dart';
-
+ 
 class DashboardScreen extends StatefulWidget {
   final bool isDark;
   final Function(bool) onThemeToggle;
   final Function(int) onNavigate;
-
+ 
   const DashboardScreen({
     super.key,
     required this.isDark,
     required this.onThemeToggle,
     required this.onNavigate,
   });
-
+ 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
-
+ 
 class _DashboardScreenState extends State<DashboardScreen> {
   final ScrollController _scrollController = ScrollController();
   bool isViewAllHovered = false;
   int? hoveredThemeBtn;
   int? hoveredActionBoxIndex;
-
+ 
   final List<Map<String, dynamic>> reports = const [
     {'id': 'RPT-20260225-0012', 'files': '1240', 'success': '1240', 'failed': '0', 'date': '2026-02-25', 'time': '14:12', 'hasWarning': false},
     {'id': 'RPT-20260224-0011', 'files': '1', 'success': '1', 'failed': '0', 'date': '2026-02-24', 'time': '09:45', 'hasWarning': false},
@@ -30,16 +30,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     {'id': 'RPT-20260222-0009', 'files': '870', 'success': '870', 'failed': '0', 'date': '2026-02-22', 'time': '03:00', 'hasWarning': false},
     {'id': 'RPT-20260220-0008', 'files': '55', 'success': '55', 'failed': '0', 'date': '2026-02-20', 'time': '16:30', 'hasWarning': false},
   ];
-
+ 
   @override
   Widget build(BuildContext context) {
     Color cardBg = widget.isDark ? AppColors.darkCard : AppColors.lightCard;
     Color textColor = widget.isDark ? AppColors.darkText : AppColors.lightText;
     Color subTextColor = widget.isDark ? AppColors.darkGreyText : AppColors.lightGreyText;
     Color borderColor = widget.isDark ? AppColors.darkBorder : AppColors.lightBorder;
-
+ 
     return Container(
-      color: widget.isDark ? AppColors.darkBg : AppColors.lightBg,
+      color: widget.isDark ? AppColors.darkBg : const Color(0xFFF3F4F6),
       child: Scrollbar(
         controller: _scrollController,
         thumbVisibility: true,
@@ -49,7 +49,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('System Overview', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
+              Text('System Overview', style: TextStyle(fontSize: 20, fontWeight: FontWeight.normal, color: textColor)),
               const SizedBox(height: 2),
               Text('Monitor your security operations and system health', style: TextStyle(fontSize: 12, color: subTextColor)),
               const SizedBox(height: 16),
@@ -95,7 +95,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
+ 
   Widget _licenseStatusCard(Color bg, Color text, Color subText, Color border) {
     return Container(
       width: double.infinity,
@@ -132,7 +132,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
+ 
   Widget _quickActionsRow(Color bg, Color text, Color subText, Color border) {
     return IntrinsicHeight(
       child: Row(
@@ -149,7 +149,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
+ 
   Widget _actionBoxCard(int boxIndex, IconData icon, String title, String subtitle, Color bg, Color text, Color subText, Color border) {
     bool isHovered = hoveredActionBoxIndex == boxIndex;
     return MouseRegion(
@@ -181,7 +181,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
+ 
   Widget _themeBoxCard(int boxIndex, Color bg, Color text, Color subText, Color border) {
     bool isHovered = hoveredActionBoxIndex == boxIndex;
     return MouseRegion(
@@ -222,7 +222,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
+ 
   Widget _themeInteractiveBtn(IconData icon, int index, bool isDarkBtn) {
     bool isSelected = (widget.isDark && isDarkBtn) || (!widget.isDark && index == 0);
     bool isHovered = hoveredThemeBtn == index;
@@ -247,7 +247,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
+ 
   Widget _systemHealthRow(Color bg, Color text, Color subText, Color border) {
     return Row(
       children: [
@@ -259,7 +259,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ],
     );
   }
-
+ 
   Widget _statCard(String title, String value, String subtitle, Color valColor, Color subColor, Color bg, Color border) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18), // Increased height for system health cards slightly to match proportions
@@ -276,7 +276,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
+ 
   Widget _recentReportsTable(Color bg, Color text, Color subText, Color border) {
     return Container(
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10), border: Border.all(color: border)),
@@ -319,8 +319,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
+ 
   Widget _th(String label, Color color) => Padding(padding: const EdgeInsets.symmetric(vertical: 13), child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)));
   Widget _td(String val, Color color) => Padding(padding: const EdgeInsets.symmetric(vertical: 13), child: Text(val, style: TextStyle(fontSize: 12, color: color)));
 }
-
+ 
