@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-
+ 
 class VolumeEraserScreen extends StatefulWidget {
   const VolumeEraserScreen({Key? key}) : super(key: key);
-
+ 
   @override
   State<VolumeEraserScreen> createState() => _VolumeEraserScreenState();
 }
-
+ 
 class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
   String selectedVolume = 'D:';
   String selectedMethod = 'Zero Fill (1-pass)';
-
+ 
   final List<String> erasureMethods = [
     'Zero Fill (1-pass)',
     'One Fill (1-pass)',
@@ -20,11 +20,11 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
     'DoD 5220.28-M (STD) (3-pass)',
     'HMG IS5 Enhanced (3-pass)',
   ];
-
+ 
   OverlayEntry? _overlayEntry;
   final LayerLink _layerLink = LayerLink();
   final ScrollController _scrollController = ScrollController();
-
+ 
   void _toggleDropdown() {
     if (_overlayEntry == null) {
       _overlayEntry = _createOverlayEntry();
@@ -33,19 +33,19 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
       _closeDropdown();
     }
   }
-
+ 
   void _closeDropdown() {
     _overlayEntry?.remove();
     _overlayEntry = null;
   }
-
+ 
   @override
   void dispose() {
     _closeDropdown();
     _scrollController.dispose();
     super.dispose();
   }
-
+ 
   OverlayEntry _createOverlayEntry() {
     return OverlayEntry(
       builder: (context) => Stack(
@@ -101,7 +101,8 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
       ),
     );
   }
-Widget _buildVolumeCard({
+ 
+  Widget _buildVolumeCard({
     required String volumeId,
     required String title,
     required bool isBootVolume,
@@ -112,7 +113,7 @@ Widget _buildVolumeCard({
     required String percentageText,
   }) {
     final bool isSelected = selectedVolume == volumeId;
-
+ 
     return InkWell(
       onTap: () {
         setState(() {
@@ -129,7 +130,7 @@ Widget _buildVolumeCard({
           color: Colors.white,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isSelected ? const Color(0xFF0D9488) : const Color(0xFFE2E8F0),
+            color: isSelected ? const Color(0xFF14B8A6) : const Color(0xFFE2E8F0),
             width: isSelected ? 1.5 : 1.0,
           ),
         ),
@@ -147,7 +148,7 @@ Widget _buildVolumeCard({
                   ),
                   child: const Icon(
                     Icons.dns_rounded,
-                    color: Color(0xFF0D9488),
+                    color: Color(0xFF14B8A6),
                     size: 16,
                   ),
                 ),
@@ -280,7 +281,7 @@ Widget _buildVolumeCard({
                   value: usagePercentage,
                   minHeight: 5.0,
                   backgroundColor: const Color(0xFFE2E8F0),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0D9488)),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF14B8A6)),
                 ),
               ),
             ),
@@ -289,7 +290,8 @@ Widget _buildVolumeCard({
       ),
     );
   }
-void _showBootVolumeSafetyDialog() {
+ 
+  void _showBootVolumeSafetyDialog() {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -394,7 +396,7 @@ void _showBootVolumeSafetyDialog() {
       },
     );
   }
-
+ 
   void _showConfirmVolumeEraserDialog() {
     showDialog(
       context: context,
@@ -404,18 +406,18 @@ void _showBootVolumeSafetyDialog() {
       },
     );
   }
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: const Color(0xFFF3F4F6),
       body: SafeArea(
         child: Column(
           children: [
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 14.0),
-              color: const Color(0xFFF1F5F9),
+              color: const Color(0xFFF3F4F6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
@@ -437,7 +439,7 @@ void _showBootVolumeSafetyDialog() {
             ),
             Expanded(
               child: Container(
-                color: const Color(0xFFF1F5F9),
+                color: const Color(0xFFF3F4F6),
                 child: Scrollbar(
                   controller: _scrollController,
                   thumbVisibility: true,
@@ -449,9 +451,9 @@ void _showBootVolumeSafetyDialog() {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 14.0),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEDF3F2),
+                          color: const Color(0xFFDCE9F5),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFB8CCC8)),
+                          border: Border.all(color: const Color(0xFFB3CFE8)),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -460,7 +462,7 @@ void _showBootVolumeSafetyDialog() {
                               padding: EdgeInsets.only(top: 1.0),
                               child: Icon(
                                 Icons.warning_amber_rounded,
-                                color: Color(0xFF0D9488),
+                                color: Color(0xFF14B8A6),
                                 size: 18,
                               ),
                             ),
@@ -473,7 +475,7 @@ void _showBootVolumeSafetyDialog() {
                                     'Warning: Permanent Data Loss',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      color: Color(0xFF0F172A),
+                                      color: Color(0xFF64748B),
                                       fontSize: 12,
                                     ),
                                   ),
@@ -493,7 +495,7 @@ void _showBootVolumeSafetyDialog() {
                         ),
                       ),
                       const SizedBox(height: 16),
-_buildVolumeCard(
+                      _buildVolumeCard(
                         volumeId: 'C:',
                         title: 'System (C:)',
                         isBootVolume: true,
@@ -649,19 +651,20 @@ _buildVolumeCard(
     );
   }
 }
+ 
 class _ConfirmEraserDialogContent extends StatefulWidget {
   final String selectedVolume;
-
+ 
   const _ConfirmEraserDialogContent({Key? key, required this.selectedVolume}) : super(key: key);
-
+ 
   @override
   State<_ConfirmEraserDialogContent> createState() => _ConfirmEraserDialogContentState();
 }
-
+ 
 class _ConfirmEraserDialogContentState extends State<_ConfirmEraserDialogContent> {
   final TextEditingController _controller = TextEditingController();
   bool _isConfirmed = false;
-
+ 
   @override
   void initState() {
     super.initState();
@@ -674,13 +677,13 @@ class _ConfirmEraserDialogContentState extends State<_ConfirmEraserDialogContent
       }
     });
   }
-
+ 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
-
+ 
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -777,7 +780,7 @@ class _ConfirmEraserDialogContentState extends State<_ConfirmEraserDialogContent
               height: 36,
               child: TextField(
                 controller: _controller,
-                cursorColor: const Color(0xFF0D9488),
+                cursorColor: const Color(0xFF14B8A6),
                 style: const TextStyle(fontSize: 12, color: Color(0xFF0F172A)),
                 decoration: InputDecoration(
                   hintText: 'Confirm',
@@ -791,7 +794,7 @@ class _ConfirmEraserDialogContentState extends State<_ConfirmEraserDialogContent
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6),
-                    borderSide: const BorderSide(color: Color(0xFF0D9488), width: 1.5),
+                    borderSide: const BorderSide(color: Color(0xFF14B8A6), width: 1.5),
                   ),
                 ),
               ),
@@ -822,26 +825,26 @@ class _ConfirmEraserDialogContentState extends State<_ConfirmEraserDialogContent
     );
   }
 }
-
+ 
 class _TealHoverButton extends StatefulWidget {
   final String text;
   final bool isCancel;
   final VoidCallback onTap;
-
+ 
   const _TealHoverButton({
     Key? key,
     required this.text,
     required this.isCancel,
     required this.onTap,
   }) : super(key: key);
-
+ 
   @override
   State<_TealHoverButton> createState() => _TealHoverButtonState();
 }
-
+ 
 class _TealHoverButtonState extends State<_TealHoverButton> {
   bool isHovered = false;
-
+ 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
@@ -854,10 +857,10 @@ class _TealHoverButtonState extends State<_TealHoverButton> {
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
           decoration: BoxDecoration(
-            color: isHovered ? const Color(0xFF0D9488) : Colors.white,
+            color: isHovered ? const Color(0xFF14B8A6) : Colors.white,
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: isHovered ? const Color(0xFF0D9488) : const Color(0xFFCBD5E1),
+              color: isHovered ? const Color(0xFF14B8A6) : const Color(0xFFCBD5E1),
             ),
           ),
           child: Text(
@@ -873,25 +876,25 @@ class _TealHoverButtonState extends State<_TealHoverButton> {
     );
   }
 }
-
+ 
 class _ConfirmActionButton extends StatefulWidget {
   final bool isEnabled;
   final VoidCallback onTap;
-
+ 
   const _ConfirmActionButton({Key? key, required this.isEnabled, required this.onTap}) : super(key: key);
-
+ 
   @override
   State<_ConfirmActionButton> createState() => _ConfirmActionButtonState();
 }
-
+ 
 class _ConfirmActionButtonState extends State<_ConfirmActionButton> {
   bool isHovered = false;
-
+ 
   @override
   Widget build(BuildContext context) {
     Color bgColor;
     Color fgColor;
-
+ 
     if (!widget.isEnabled) {
       bgColor = const Color(0xFFDC2626).withOpacity(0.5);
       fgColor = Colors.white.withOpacity(0.7);
@@ -899,7 +902,7 @@ class _ConfirmActionButtonState extends State<_ConfirmActionButton> {
       bgColor = isHovered ? const Color(0xFFB91C1C) : const Color(0xFFDC2626);
       fgColor = Colors.white;
     }
-
+ 
     return MouseRegion(
       onEnter: (_) => setState(() => isHovered = true),
       onExit: (_) => setState(() => isHovered = false),
@@ -926,42 +929,42 @@ class _ConfirmActionButtonState extends State<_ConfirmActionButton> {
     );
   }
 }
-
+ 
 class _HoverableButton extends StatefulWidget {
   final String text;
   final bool isWhiteButton;
   final VoidCallback onTap;
-
+ 
   const _HoverableButton({
     Key? key,
     required this.text,
     required this.isWhiteButton,
     required this.onTap,
   }) : super(key: key);
-
+ 
   @override
   State<_HoverableButton> createState() => _HoverableButtonState();
 }
-
+ 
 class _HoverableButtonState extends State<_HoverableButton> {
   bool isHovered = false;
-
+ 
   @override
   Widget build(BuildContext context) {
     Color backgroundColor;
     Color textColor;
     Border? border;
-
+ 
     if (widget.isWhiteButton) {
-      backgroundColor = isHovered ? const Color(0xFF0D9488) : Colors.white;
+      backgroundColor = isHovered ? const Color(0xFF14B8A6) : Colors.white;
       textColor = isHovered ? Colors.white : const Color(0xFF64748B);
-      border = Border.all(color: isHovered ? const Color(0xFF0D9488) : const Color(0xFFCBD5E1));
+      border = Border.all(color: isHovered ? const Color(0xFF14B8A6) : const Color(0xFFCBD5E1));
     } else {
       backgroundColor = isHovered ? const Color(0xFFB91C1C) : const Color(0xFFDC2626);
       textColor = Colors.white;
       border = null;
     }
-
+ 
     return MouseRegion(
       onEnter: (_) => setState(() => isHovered = true),
       onExit: (_) => setState(() => isHovered = false),
@@ -989,26 +992,26 @@ class _HoverableButtonState extends State<_HoverableButton> {
     );
   }
 }
-
+ 
 class _HoverableMenuItem extends StatefulWidget {
   final String method;
   final bool isSelected;
   final VoidCallback onTap;
-
+ 
   const _HoverableMenuItem({
     Key? key,
     required this.method,
     required this.isSelected,
     required this.onTap,
   }) : super(key: key);
-
+ 
   @override
   State<_HoverableMenuItem> createState() => _HoverableMenuItemState();
 }
-
+ 
 class _HoverableMenuItemState extends State<_HoverableMenuItem> {
   bool isHovered = false;
-
+ 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
@@ -1023,7 +1026,7 @@ class _HoverableMenuItemState extends State<_HoverableMenuItem> {
           alignment: Alignment.centerLeft,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: isHovered ? const Color(0xFF0D9488) : Colors.transparent,
+            color: isHovered ? const Color(0xFF14B8A6) : Colors.transparent,
           ),
           child: Text(
             widget.method,
@@ -1032,7 +1035,7 @@ class _HoverableMenuItemState extends State<_HoverableMenuItem> {
               color: isHovered
                   ? Colors.white
                   : (widget.isSelected
-                      ? const Color(0xFF0D9488)
+                      ? const Color(0xFF14B8A6)
                       : const Color(0xFF334155)),
               fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.normal,
             ),
@@ -1042,3 +1045,4 @@ class _HoverableMenuItemState extends State<_HoverableMenuItem> {
     );
   }
 }
+ 

@@ -248,6 +248,7 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
     eraseController.clear();
     final countToErase =
         selectedIndexes.isNotEmpty ? selectedIndexes.length : fileItems.length;
+    bool eraseFieldHovered = false;
  
     showDialog(
       context: context,
@@ -270,7 +271,7 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: const BoxDecoration(
-                            color: Color(0xFFFCE7F3),
+                            color: Color(0xFFFEE2E2),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.warning_amber_rounded,
@@ -302,39 +303,45 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
                       style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 8),
-                    TextField(
-                      controller: eraseController,
-                      onChanged: (_) => setDialogState(() {}),
-                      cursorColor: AppColors.primaryTeal,
-                      style: const TextStyle(
-                        color: AppColors.activeGreenText,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'ERASE',
-                        hintStyle: TextStyle(
-                          color: AppColors.activeGreenText.withOpacity(0.55),
+                    MouseRegion(
+                      onEnter: (_) => setDialogState(() => eraseFieldHovered = true),
+                      onExit: (_) => setDialogState(() => eraseFieldHovered = false),
+                      child: TextField(
+                        controller: eraseController,
+                        onChanged: (_) => setDialogState(() {}),
+                        cursorColor: AppColors.primaryTeal,
+                        style: const TextStyle(
+                          color: AppColors.activeGreenText,
                           fontWeight: FontWeight.w600,
                         ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                        filled: true,
-                        fillColor: Colors.transparent,
-                        hoverColor: const Color(0xFFDCE9F5),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(
-                              color: AppColors.primaryTeal, width: 1.5),
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(
-                              color: AppColors.primaryTeal, width: 1.5),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide:
-                              const BorderSide(color: AppColors.primaryTeal, width: 2),
+                        decoration: InputDecoration(
+                          hintText: 'ERASE',
+                          hintStyle: TextStyle(
+                            color: AppColors.activeGreenText.withOpacity(0.55),
+                            fontWeight: FontWeight.w600,
+                          ),
+                          isDense: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          filled: true,
+                          fillColor: eraseFieldHovered
+                              ? const Color(0xFFDCE9F5)
+                              : Colors.transparent,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: const BorderSide(
+                                color: AppColors.primaryTeal, width: 1.5),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: const BorderSide(
+                                color: AppColors.primaryTeal, width: 1.5),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide:
+                                const BorderSide(color: AppColors.primaryTeal, width: 2),
+                          ),
                         ),
                       ),
                     ),
@@ -456,8 +463,9 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: widget.isDark ? Colors.white10 : const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(6),
+                        color: widget.isDark ? Colors.white10 : Colors.white,
+                        borderRadius: BorderRadius.zero,
+                        border: Border.all(color: borderColor),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
