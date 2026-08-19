@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import '../theme/theme.dart';
  
 class DashboardScreen extends StatefulWidget {
-  final bool isDark;
-  final Function(bool) onThemeToggle;
+  // CHANGED: bool isDark -> AppThemeMode themeMode
+  final AppThemeMode themeMode;
+  final Function(AppThemeMode) onThemeToggle;
   final Function(int) onNavigate;
  
   const DashboardScreen({
     super.key,
-    required this.isDark,
+    required this.themeMode,
     required this.onThemeToggle,
     required this.onNavigate,
   });
@@ -23,6 +24,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int? hoveredThemeBtn;
   int? hoveredActionBoxIndex;
  
+  // Helper flag used by the theme-toggle capsule (replaces old widget.isDark)
+  bool get _isDarkBase =>
+      widget.themeMode == AppThemeMode.dark ||
+      widget.themeMode == AppThemeMode.greenDark;
+ 
   final List<Map<String, dynamic>> reports = const [
     {'id': 'RPT-20260225-0012', 'files': '1240', 'success': '1240', 'failed': '0', 'date': '2026-02-25', 'time': '14:12', 'hasWarning': false},
     {'id': 'RPT-20260224-0011', 'files': '1', 'success': '1', 'failed': '0', 'date': '2026-02-24', 'time': '09:45', 'hasWarning': false},
@@ -33,19 +39,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
  
   @override
   Widget build(BuildContext context) {
-    Color cardBg = widget.isDark ? AppColors.darkCard : AppColors.lightCard;
-    Color textColor = widget.isDark ? AppColors.darkText : AppColors.lightText;
-    Color subTextColor = widget.isDark ? AppColors.darkGreyText : AppColors.lightGreyText;
-    Color borderColor = widget.isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    // CHANGED: colors now come from a switch over the 4 theme modes,
+    // instead of a simple isDark ? a : b ternary.
+    Color pageBg;
+    Color cardBg;
+    Color textColor;
+    Color subTextColor;
+    Color borderColor;
+ 
+    switch (widget.themeMode) {
+      case AppThemeMode.dark:
+        pageBg = AppColors.darkBg;
+        cardBg = AppColors.darkCard;
+        textColor = AppColors.darkText;
+        subTextColor = AppColors.darkGreyText;
+        borderColor = AppColors.darkBorder;
+        break;
+      case AppThemeMode.greenDark:
+        // Same dark background as normal dark mode, but ALL text is green.
+        pageBg = AppColors.darkBg;
+        cardBg = AppColors.darkCard;
+        textColor = AppColors.greenDarkText;
+        subTextColor = AppColors.greenDarkGreyText;
+        borderColor = AppColors.darkBorder;
+        break;
+      case AppThemeMode.greenLight:
+        // Light background/cards with a green tint.
+        pageBg = AppColors.greenLightBg;
+        cardBg = AppColors.greenLightCard;
+        textColor = AppColors.greenLightText;
+        subTextColor = AppColors.greenLightGreyText;
+        borderColor = AppColors.greenLightBorder;
+        break;
+      case AppThemeMode.light:
+        pageBg = const Color(0xFFF3F4F6);
+        cardBg = AppColors.lightCard;
+        textColor = AppColors.lightText;
+        subTextColor = AppColors.lightGreyText;
+        borderColor = AppColors.lightBorder;
+        break;
+    }
  
     return Container(
-      color: widget.isDark ? AppColors.darkBg : const Color(0xFFF3F4F6),
+      color: pageBg,
       child: Scrollbar(
         controller: _scrollController,
         thumbVisibility: true,
         child: SingleChildScrollView(
           controller: _scrollController,
-          padding: const EdgeInsets.all(20), 
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -157,7 +199,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       onEnter: (_) => setState(() => hoveredActionBoxIndex = boxIndex),
       onExit: (_) => setState(() => hoveredActionBoxIndex = null),
       child: GestureDetector(
-        onTap: () => widget.onNavigate(boxIndex + 1), 
+        onTap: () => widget.onNavigate(boxIndex + 1),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           height: 130,
@@ -206,14 +248,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(color: widget.isDark ? Colors.white10 : const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(6)),
+              // CHANGED: widget.isDark -> _isDarkBase
+              decoration: BoxDecoration(color: _isDarkBase ? Colors.white10 : const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(6)),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _themeInteractiveBtn(Icons.wb_sunny_outlined, 0, false),
-                  _themeInteractiveBtn(Icons.nightlight_outlined, 1, true),
-                  _themeInteractiveBtn(Icons.shield_outlined, 2, false),
-                  _themeInteractiveBtn(Icons.flash_on_outlined, 3, false),
+                  // CHANGED: each button now maps directly to one AppThemeMode
+                  _themeInteractiveBtn(Icons.wb_sunny_outlined, 0, AppThemeMode.light),
+                  _themeInteractiveBtn(Icons.nightlight_outlined, 1, AppThemeMode.dark),
+                  _themeInteractiveBtn(Icons.shield_outlined, 2, AppThemeMode.greenLight),
+                  _themeInteractiveBtn(Icons.flash_on_outlined, 3, AppThemeMode.greenDark),
                 ],
               ),
             )
@@ -223,23 +267,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
  
-  Widget _themeInteractiveBtn(IconData icon, int index, bool isDarkBtn) {
-    bool isSelected = (widget.isDark && isDarkBtn) || (!widget.isDark && index == 0);
+  // CHANGED: signature now takes AppThemeMode mode instead of bool isDarkBtn
+  Widget _themeInteractiveBtn(IconData icon, int index, AppThemeMode mode) {
+    bool isSelected = widget.themeMode == mode;
     bool isHovered = hoveredThemeBtn == index;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => hoveredThemeBtn = index),
       onExit: (_) => setState(() => hoveredThemeBtn = null),
       child: GestureDetector(
-        onTap: () {
-          if (index == 0) widget.onThemeToggle(false);
-          if (index == 1) widget.onThemeToggle(true);
-        },
+        onTap: () => widget.onThemeToggle(mode),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: isSelected ? (widget.isDark ? AppColors.darkCard : Colors.white) : (isHovered ? AppColors.primaryTeal.withOpacity(0.15) : Colors.transparent),
+            color: isSelected ? (_isDarkBase ? AppColors.darkCard : Colors.white) : (isHovered ? AppColors.primaryTeal.withOpacity(0.15) : Colors.transparent),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Icon(icon, size: 14, color: isSelected ? AppColors.primaryTeal : (isHovered ? AppColors.primaryTeal : AppColors.lightGreyText)),

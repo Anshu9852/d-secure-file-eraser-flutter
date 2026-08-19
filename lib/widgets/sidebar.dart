@@ -4,13 +4,15 @@ import '../theme/theme.dart';
 class Sidebar extends StatefulWidget {
   final int selectedIndex;
   final Function(int) onItemSelected;
-  final bool isDark;
+  // CHANGED: isDark (bool) -> themeMode (AppThemeMode), so sidebar can also
+  // follow the new "light greenish" and "dark + green text" modes.
+  final AppThemeMode themeMode;
  
   const Sidebar({
     super.key,
     required this.selectedIndex,
     required this.onItemSelected,
-    required this.isDark,
+    required this.themeMode,
   });
  
   @override
@@ -22,12 +24,46 @@ class _SidebarState extends State<Sidebar> {
   bool isCollapsed = false;
   bool isBottomBtnHovered = false;
  
-  // ---- Custom grey palette (as per requirement) ----
-  static const Color sidebarGreyBg = Color(0xFFF7F7F8); // light grey-white
-  static const Color sidebarGreyText = Color(0xFF3A3A3A);
-  static const Color sidebarGreyBorder = Color(0xFFD5D5D5); // lighter grey line
-  static const Color sidebarHoverBg = Color(0xFFE3E8EE); // light grey-blue hover
-  static const Color sidebarSelectedBg = Color(0xFFD6DFE7); // light blue-grey selected
+  // Helper flags derived from themeMode
+  bool get _isDarkBase =>
+      widget.themeMode == AppThemeMode.dark ||
+      widget.themeMode == AppThemeMode.greenDark;
+  bool get _isGreenLight => widget.themeMode == AppThemeMode.greenLight;
+  bool get _isGreenDark => widget.themeMode == AppThemeMode.greenDark;
+ 
+  // ---- Custom grey palette (dynamic based on themeMode now) ----
+  Color get sidebarGreyBg {
+    // Now uses the exact same mint color (AppColors.greenLightBg) that's
+    // used for the main page/dashboard background in greenLight mode.
+    if (_isGreenLight) return AppColors.greenLightBg;
+    if (_isDarkBase) return AppColors.darkCard;
+    return const Color(0xFFF7F7F8); // light grey-white
+  }
+ 
+  Color get sidebarGreyText {
+    if (_isGreenDark) return AppColors.greenDarkText;
+    if (_isGreenLight) return AppColors.greenLightText;
+    if (_isDarkBase) return AppColors.darkText;
+    return const Color(0xFF3A3A3A);
+  }
+ 
+  Color get sidebarGreyBorder {
+    if (_isGreenLight) return AppColors.greenLightBorder;
+    if (_isDarkBase) return AppColors.darkBorder;
+    return const Color(0xFFD5D5D5); // lighter grey line
+  }
+ 
+  Color get sidebarHoverBg {
+    if (_isGreenLight) return const Color(0xFFDCFCE7);
+    if (_isDarkBase) return const Color(0xFF334155);
+    return const Color(0xFFE3E8EE); // light grey-blue hover
+  }
+ 
+  Color get sidebarSelectedBg {
+    if (_isGreenLight) return const Color(0xFFBBF7D0);
+    if (_isDarkBase) return const Color(0xFF3B4A5F);
+    return const Color(0xFFD6DFE7); // light blue-grey selected
+  }
  
   final List<Map<String, dynamic>> menuItems = const [
     {'icon': Icons.grid_view_rounded, 'title': 'Dashboard'},
