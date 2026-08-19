@@ -80,7 +80,8 @@ class _HomeScreenState extends State<HomeScreen> {
       case AppThemeMode.greenDark:
         return const Color(0xFF1E293B);
       case AppThemeMode.greenLight:
-        return AppColors.greenLightCard;
+        // Halka mint background — poore page (scaffold/sidebar) jaisa hi.
+        return AppColors.greenLightBg;
       case AppThemeMode.light:
         return const Color(0xFFF1F5F9);
     }
@@ -153,7 +154,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SchedulerScreen(),
                             const ReportsScreen(), // Sirf yeh naya addition hai
                             const CloudEraseScreen(), // Cloud Erase screen ab yahan wired hai
-                            SettingsScreen(isDark: isDark), // Naya Settings screen yahan wired hai
+                            SettingsScreen(
+                              themeMode: themeMode,
+                              onThemeModeChanged: _onThemeToggle,
+                            ), // Naya Settings screen yahan wired hai
                           ],
                         ),
                       ),

@@ -1,10 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import '../theme/theme.dart';
  
 class SettingsScreen extends StatefulWidget {
-  final bool isDark;
-  const SettingsScreen({super.key, required this.isDark});
+  final AppThemeMode themeMode;
+  final ValueChanged<AppThemeMode> onThemeModeChanged;
+  const SettingsScreen({
+    super.key,
+    required this.themeMode,
+    required this.onThemeModeChanged,
+  });
  
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -28,19 +34,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final ScrollController _pageScrollController = ScrollController();
  
   // ---------------- Appearance tab ----------------
-  late String _appearanceMode;
+  // Derived directly from widget.themeMode so it always stays in sync with
+  // the rest of the app (sidebar, background, etc.) instead of keeping its
+  // own separate local state.
+  String get _appearanceMode {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return 'Light';
+      case AppThemeMode.dark:
+        return 'Dark';
+      case AppThemeMode.greenDark:
+        return 'DSecure';
+      case AppThemeMode.greenLight:
+        return 'DSecure Light';
+    }
+  }
+ 
+  AppThemeMode _labelToMode(String label) {
+    switch (label) {
+      case 'Dark':
+        return AppThemeMode.dark;
+      case 'DSecure':
+        return AppThemeMode.greenDark;
+      case 'DSecure Light':
+        return AppThemeMode.greenLight;
+      default:
+        return AppThemeMode.light;
+    }
+  }
+ 
+  // Backward-compatible dark flag (Dark aur DSecure dono dark base hain)
+  bool get _isDark =>
+      widget.themeMode == AppThemeMode.dark ||
+      widget.themeMode == AppThemeMode.greenDark;
+ 
   final Map<String, bool> _appearanceHover = {
     'Light': false,
     'Dark': false,
     'DSecure': false,
     'DSecure Light': false,
   };
- 
-  @override
-  void initState() {
-    super.initState();
-    _appearanceMode = widget.isDark ? 'Dark' : 'Light';
-  }
  
   final List<String> _tabs = const ['General', 'Ignore List', 'Appearance', 'Language'];
  
@@ -153,13 +186,100 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // Colors
   static const Color teal = Color(0xFF14B8A6);
  
-  Color get _bgColor => widget.isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6);
-  Color get _cardColor => widget.isDark ? const Color(0xFF1E293B) : Colors.white;
-  Color get _borderColor => widget.isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-  Color get _titleColor => widget.isDark ? Colors.white : const Color(0xFF0F172A);
-  Color get _labelColor => widget.isDark ? const Color(0xFF94A3B8) : Colors.grey[600]!;
-  Color get _tabBarBg => widget.isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
-  Color get _dividerColor => widget.isDark ? const Color(0xFF475569) : const Color(0xFFD1D5DB);
+  // CHANGED: ab sirf isDark (true/false) nahi, poore themeMode ke hisaab se
+  // colors decide hote hain — taaki DSecure (greenDark) aur DSecure Light
+  // (greenLight) click karne par Settings page ka background/text bhi
+  // (sidebar ki tarah) sahi se badle, sirf sidebar hi na badle.
+  Color get _bgColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return const Color(0xFFF3F4F6);
+      case AppThemeMode.dark:
+        return const Color(0xFF0F172A);
+      case AppThemeMode.greenDark:
+        return const Color(0xFF0F172A); // dark background, text green
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightBg; // halka mint background
+    }
+  }
+ 
+  Color get _cardColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return Colors.white;
+      case AppThemeMode.dark:
+        return const Color(0xFF1E293B);
+      case AppThemeMode.greenDark:
+        return const Color(0xFF1E293B);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightCard;
+    }
+  }
+ 
+  Color get _borderColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return const Color(0xFFE2E8F0);
+      case AppThemeMode.dark:
+        return const Color(0xFF334155);
+      case AppThemeMode.greenDark:
+        return const Color(0xFF334155);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightBorder;
+    }
+  }
+ 
+  Color get _titleColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return const Color(0xFF0F172A);
+      case AppThemeMode.dark:
+        return Colors.white;
+      case AppThemeMode.greenDark:
+        return AppColors.greenDarkText; // #4ADE80
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightText;
+    }
+  }
+ 
+  Color get _labelColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return Colors.grey[600]!;
+      case AppThemeMode.dark:
+        return const Color(0xFF94A3B8);
+      case AppThemeMode.greenDark:
+        return AppColors.greenDarkGreyText;
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightGreyText;
+    }
+  }
+ 
+  Color get _tabBarBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return const Color(0xFFE2E8F0);
+      case AppThemeMode.dark:
+        return const Color(0xFF1E293B);
+      case AppThemeMode.greenDark:
+        return const Color(0xFF1E293B);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightBorder;
+    }
+  }
+ 
+  Color get _dividerColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return const Color(0xFFD1D5DB);
+      case AppThemeMode.dark:
+        return const Color(0xFF475569);
+      case AppThemeMode.greenDark:
+        return const Color(0xFF475569);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightBorder;
+    }
+  }
  
   // ---------------- Toast / notification stack ----------------
   final List<_ToastMsg> _toasts = [];
@@ -472,7 +592,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       onEnter: (_) => setState(() => _appearanceHover[value] = true),
       onExit: (_) => setState(() => _appearanceHover[value] = false),
       child: GestureDetector(
-        onTap: () => setState(() => _appearanceMode = value),
+        // CHANGED: ab local state ki jagah HomeScreen ke themeMode ko
+        // update karta hai, taaki poora app (sidebar/background/text)
+        // turant naye theme me switch ho jaye.
+        onTap: () => widget.onThemeModeChanged(_labelToMode(value)),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 120),
           width: double.infinity,
@@ -487,7 +610,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: selected
                 ? _cardColor
                 : (hovered
-                    ? (widget.isDark
+                    ? (_isDark
                         ? const Color(0xFF243044)
                         : const Color(0xFFF3F4F6))
                     : _cardColor),
@@ -781,7 +904,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 margin: const EdgeInsets.only(right: 2),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? (widget.isDark ? const Color(0xFF334155) : Colors.white)
+                      ? (_isDark ? const Color(0xFF334155) : Colors.white)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -967,7 +1090,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           decoration: BoxDecoration(
             color: resetHovered
                 ? teal
-                : (widget.isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
+                : (_isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
               color: resetHovered ? teal : _borderColor,
