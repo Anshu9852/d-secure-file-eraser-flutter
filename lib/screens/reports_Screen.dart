@@ -1,35 +1,20 @@
-
-
-
-
-
-
-
-
-
 import 'package:flutter/material.dart';
-// [CHANGED - Upload buttons open native file picker] Requires the
-// file_picker package. Add this to pubspec.yaml under dependencies:
-//   file_picker: ^8.1.2
 import 'package:file_picker/file_picker.dart';
-// [NEW - Preview button opens report in a new browser tab] Requires the
-// url_launcher package. Add this to pubspec.yaml under dependencies:
-//   url_launcher: ^6.3.0
 import 'package:url_launcher/url_launcher.dart';
-// [NEW - Preview button] kIsWeb tells us whether we're running as a Flutter
-// Web app (where Uri.base.origin is the real page URL) or as a native
-// desktop/mobile app (where Uri.base is meaningless for building a link).
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../theme/theme.dart';
  
 class ReportsScreen extends StatefulWidget {
-  const ReportsScreen({Key? key}) : super(key: key);
+  // CHANGED: now takes AppThemeMode so this page follows Light/Dark/
+  // DSecure/DSecure Light the same way Cloud Erase, sidebar, dashboard do.
+  final AppThemeMode themeMode;
+  const ReportsScreen({Key? key, required this.themeMode}) : super(key: key);
  
   @override
   State<ReportsScreen> createState() => _ReportsScreenState();
 }
  
 class _ReportsScreenState extends State<ReportsScreen> {
-  // Table Data based on the prompt's 8 rows
   final List<Map<String, dynamic>> _reportsData = [
     {'id': 'RPT-20260225-0012', 'type': 'Files & Folder', 'total': 1240, 'erased': 1240, 'failed': 0, 'date': 'Feb 25, 2026'},
     {'id': 'RPT-20260224-0011', 'type': 'Erase Volume', 'total': 1, 'erased': 1, 'failed': 0, 'date': 'Feb 24, 2026'},
@@ -41,34 +26,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
     {'id': 'RPT-20260210-0005', 'type': 'Scheduled Task Erasure', 'total': 100, 'erased': 100, 'failed': 0, 'date': 'Feb 10, 2026'},
   ];
  
-  // [CHANGED - Selection now keyed by report id] Switched from Set<int> row
-  // indices to Set<String> report ids so selection stays correct even after
-  // the table is filtered by date/type (indices would otherwise point at the
-  // wrong rows once the list shrinks).
   Set<String> _selectedRows = {};
   String _selectedFilter = 'All Reports';
  
-  // [NEW - Column sorting] Which column header is currently active for
-  // sorting, and which direction. Sorting is applied ONLY inside the
-  // _filteredData getter below (on a freshly-built list each time) - the
-  // original _reportsData array is never touched, so switching sort
-  // columns (or clearing it) always starts fresh from the real data.
   String? _sortColumn;
   bool _sortAscending = true;
  
-  // [NEW - Toast notifications] Whether the toast stack is showing its
-  // full expanded list (one card per click) or the collapsed "peek stack"
-  // view (top card + faint cards behind it + a count badge).
   bool _toastsExpanded = false;
  
-  // [CHANGED - Date filter popups] The two header date buttons now hold real
-  // selected dates instead of static placeholder text.
   DateTime? _startDate;
   DateTime? _endDate;
  
-  // [CHANGED - Popup anchoring] Each button that opens a floating popup gets
-  // its own LayerLink so the popup (an Overlay entry) can be positioned
-  // directly under that button via CompositedTransformTarget/Follower.
   final LayerLink _startDateLink = LayerLink();
   final LayerLink _endDateLink = LayerLink();
   final LayerLink _allReportsLink = LayerLink();
@@ -76,20 +44,112 @@ class _ReportsScreenState extends State<ReportsScreen> {
  
   final Color _tealGreen = const Color(0xFF009688);
   final Color _paleGreen = const Color(0xFFE8F5E9);
-  final Color _lightGrey = const Color(0xFFF5F5F5);
  
-  // [NEW - Toast notification stack] Replaces the old single-SnackBar hack
-  // with a real stack of independent toast cards, so multiple messages
-  // (e.g. clicking Upload several times) can be visible at once, each with
-  // its own auto-dismiss timer and its own close (X) button - matching the
-  // reference screen recording where several "Starting upload process..."
-  // cards pile up together.
+  // ---- Theme-aware colors driven by the 4-mode AppThemeMode. Page-level
+  // surfaces (scaffold bg, main card bg/border, toolbar, header row, row
+  // text) now follow the theme; the teal accent, red "failed" text, and
+  // the toast/calendar/dialog popups keep their existing look untouched. ----
+  Color get _pageBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return const Color(0xFFF5F5F5);
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF0F172A);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightBg;
+    }
+  }
+ 
+  Color get _cardBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return Colors.white;
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF1E293B);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightCard;
+    }
+  }
+ 
+  Color get _cardBorder {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return Colors.grey.shade300;
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF334155);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightBorder;
+    }
+  }
+ 
+  Color get _headingColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return Colors.black;
+      case AppThemeMode.dark:
+        return Colors.white;
+      case AppThemeMode.greenDark:
+        return AppColors.greenDarkText;
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightText;
+    }
+  }
+ 
+  Color get _bodyGreyColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return Colors.grey[600]!;
+      case AppThemeMode.dark:
+        return const Color(0xFF94A3B8);
+      case AppThemeMode.greenDark:
+        return AppColors.greenDarkGreyText;
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightGreyText;
+    }
+  }
+ 
+  Color get _toolbarBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return Colors.grey.shade100;
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF243044);
+      case AppThemeMode.greenLight:
+        return const Color(0xFFDCFCE7);
+    }
+  }
+ 
+  Color get _tableHeaderBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return Colors.grey[50]!;
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF243044);
+      case AppThemeMode.greenLight:
+        return const Color(0xFFDCFCE7);
+    }
+  }
+ 
+  Color get _rowHoverBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return Colors.grey[100]!;
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF243044);
+      case AppThemeMode.greenLight:
+        return const Color(0xFFDCFCE7);
+    }
+  }
+ 
   final List<_ToastItem> _toasts = [];
   int _toastCounter = 0;
  
-  // [CHANGED - Upload buttons] Tracks the picked file's name per upload
-  // row (keyed by the row's label), so "No files selected" updates to
-  // show what was actually picked from the native file browser.
   final Map<String, String?> _uploadedFileNames = {};
  
   @override
@@ -98,9 +158,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     super.dispose();
   }
  
-  // [CHANGED - Date filtering] Table rows now filter down live against the
-  // selected date range and report-type dropdown, instead of always showing
-  // the full static list.
   List<Map<String, dynamic>> get _filteredData {
     final List<Map<String, dynamic>> list = _reportsData.where((r) {
       if (_selectedFilter != 'All Reports' && r['type'] != _selectedFilter) {
@@ -119,10 +176,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
       return true;
     }).toList();
  
-    // [NEW - Column sorting] Sorts this freshly-built list only - never
-    // the original _reportsData - so the underlying 8 rows given at the
-    // start are never mutated, no matter how many times a column header
-    // is clicked or which column is sorted next.
     if (_sortColumn != null) {
       final String key = _sortKeyForColumn(_sortColumn!);
       list.sort((a, b) {
@@ -145,8 +198,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return list;
   }
  
-  // [NEW - Column sorting] Maps a header's display title to the matching
-  // key in each row's data map.
   String _sortKeyForColumn(String column) {
     switch (column) {
       case 'Report ID':
@@ -166,9 +217,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
   }
  
-  // [NEW - Column sorting] Clicking a header toggles ascending/descending
-  // if it's already the active column, or switches to that column
-  // (ascending first) otherwise.
   void _toggleSort(String column) {
     setState(() {
       if (_sortColumn == column) {
@@ -208,10 +256,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     _openOverlay = null;
   }
  
-  // [NEW - Toast notifications] Adds a new toast card to the TOP of the
-  // stack (newest first, matching the reference screenshots) and schedules
-  // it to auto-remove itself after `duration`. Returns nothing - callers
-  // don't need the id, _dismissToast (the X button) handles manual removal.
   void _showToast(String message, {Duration duration = const Duration(seconds: 4)}) {
     final String id = 'toast_${_toastCounter++}';
     setState(() {
@@ -227,9 +271,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     });
   }
  
-  // [NEW - Toast notifications] Manual removal, wired to each card's X
-  // icon - matches "cross wale icon pe click krne pe ek ek karke msg
-  // remove hota hai".
   void _dismissToast(String id) {
     setState(() {
       _toasts.removeWhere((t) => t.id == id);
@@ -237,13 +278,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     });
   }
  
-  // [NEW - Upload button] Wired to the footer "Upload" button.
-  // No rows selected -> a single "please select" toast.
-  // Rows selected -> a "Starting upload process..." toast right away,
-  // followed (after a short simulated delay) by an "Upload complete..."
-  // toast. Both stack independently, so clicking Upload repeatedly piles
-  // up multiple "Starting upload process..." cards exactly like the
-  // reference recording.
   void _handleUploadReports() {
     if (_selectedRows.isEmpty) {
       _showToast("Please select report to upload");
@@ -258,10 +292,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     });
   }
  
-  // [NEW - Save PDF button] Wired to the footer "Save PDF" button.
-  // No rows selected -> a "please select" toast.
-  // Rows selected -> the "demo app" limitation toast, since this sandbox
-  // doesn't actually generate/download PDFs.
   void _handleSavePdf() {
     if (_selectedRows.isEmpty) {
       _showToast("Please select at least one report to save");
@@ -272,15 +302,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
  
-  // [NEW - Toast notifications] The stacked column of toast cards, newest
-  // on top. Rendered inside a Positioned widget anchored to the top-right
-  // of the whole page (see build()), so it sits above the "Report
-  // Settings" button regardless of what else is happening in the table.
-  // [CHANGED - Toast notifications] Collapsed by default: shows only the
-  // newest toast, with faint "peek" cards stacked behind it and a count
-  // badge if there's more than one - tapping it expands into the full
-  // list (see below). This is the "override ho ek hi msg pe, peeche
-  // dikhata jaaye, tap karne pe list ban jaaye" behaviour.
   Widget _buildToastStack() {
     if (_toasts.isEmpty) return const SizedBox.shrink();
  
@@ -314,9 +335,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
       );
     }
  
-    // [NEW - Expanded list view] Every click's message shown individually,
-    // newest on top, each with its own close (X). A small "Collapse" row
-    // on top folds it back into the peek-stack view.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -348,13 +366,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
  
-  // [CHANGED - Toast notifications] Fixed width (was maxWidth-only before,
-  // so "Upload complete..." and "Starting upload process..." ended up
-  // different widths depending on their text length) - both message types
-  // now render at the exact same card width. `badgeCount` shows a small
-  // teal-green "+N" pill when this card is the top of a collapsed stack;
-  // `interactive` false is used for the faint peek cards behind it, which
-  // shouldn't have their own clickable close button.
   Widget _buildToastCard(_ToastItem toast, {int? badgeCount, bool interactive = true}) {
     return Material(
       elevation: 4,
@@ -397,24 +408,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
  
-  // [CHANGED - Preview button] Opens the report PDF in a NEW browser tab
-  // (web) or the system's default browser (Windows desktop), matching the
-  // reference screen recording. Requires at least one row's checkbox to
-  // be selected first.
-  //
-  // [FIX 1] Stays a plain (non-async) function and calls launchUrlString
-  // directly with NO awaited call before it. Any "await" before the
-  // launch call breaks the browser's "this came from a real click" check,
-  // so its popup blocker silently swallows the new tab - no error shown,
-  // it just never opens.
-  //
-  // [FIX 2] On Windows/desktop, Uri.base is NOT a real website address (it
-  // has no meaningful http origin the way a browser tab does), so the old
-  // "${Uri.base.origin}/..." link was broken outside of a browser. kIsWeb
-  // now branches this: on Flutter Web it still builds the link from
-  // whatever host the app is running on; everywhere else it falls back to
-  // the known deployed URL where the sample report actually lives, and
-  // asks url_launcher to open it in the OS's default browser.
   void _openPreview() {
     if (_selectedRows.isEmpty) {
       _showToast("Please select a report to preview");
@@ -425,17 +418,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ? Uri.parse('${Uri.base.origin}/assets/assets/sample_reports/sample_report.pdf')
         : Uri.parse('https://d-secure-file-erase-sand-box.vercel.app/assets/assets/sample_reports/sample_report.pdf');
  
-    // webOnlyWindowName: '_blank' forces a new tab on web.
-    // LaunchMode.externalApplication forces the OS default browser on
-    // desktop/mobile instead of trying (and failing) to open in-app.
-    // The .catchError prints the real reason to the Debug Console/Terminal
-    // instead of failing completely silently.
-    // [FIX - undefined_method error] Switched from launchUrlString(...) to
-    // launchUrl(Uri, ...) - the core function every url_launcher version
-    // exports. launchUrlString wasn't resolving, which meant a stale
-    // package cache (needs "flutter pub get" + full restart of the Dart
-    // analyzer/IDE) rather than a code problem; launchUrl avoids depending
-    // on that helper at all.
     launchUrl(
       previewUri,
       mode: LaunchMode.externalApplication,
@@ -446,9 +428,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     });
   }
  
-  // [CHANGED - Calendar popup] Opens the custom calendar popup below the
-  // given date button (start or end) using an Overlay + CompositedTransform
-  // pair, with a full-screen transparent barrier so tapping outside closes it.
   void _openCalendarPopup(BuildContext context, LayerLink link, bool isStart) {
     _closeOverlay();
     final overlay = Overlay.of(context);
@@ -494,9 +473,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     overlay.insert(entry);
   }
  
-  // [CHANGED - Report type popup] Replaces the native DropdownButton with a
-  // custom floating list so each of the 5 items can show the teal-green
-  // hover state from the reference screenshot.
   void _openReportTypeDropdown(BuildContext context) {
     _closeOverlay();
     final overlay = Overlay.of(context);
@@ -560,14 +536,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _lightGrey, // Page background
-      // [CHANGED - Toast notifications] Body is now a Stack so the toast
-      // cards can float above everything else, anchored to the top-right
-      // corner of the page - i.e. directly above the "Report Settings"
-      // button, matching the reference screenshots.
-      // [CHANGED - Toast notifications] clipBehavior: Clip.none so the
-      // toast stack (now shifted to a negative top below) is allowed to
-      // render above the Stack's own top edge instead of being cut off.
+      backgroundColor: _pageBg, // CHANGED: was hardcoded _lightGrey
       body: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -586,11 +555,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ],
             ),
           ),
-          // [NEW - Toast notifications] Positioned top-right corner.
-          // Shifted up (negative top) just enough that the toast stack
-          // floats above the "Report Settings" button instead of sitting
-          // directly on top of it, so the button peeks out and stays
-          // clickable underneath - everything else is untouched.
           Positioned(
             top: -34,
             right: 24,
@@ -601,7 +565,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
  
-  // ================= 1. PAGE HEADER =================
   Widget _buildPageHeader(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -609,20 +572,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               "Reports",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.normal, color: Colors.black),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.normal, color: _headingColor),
             ),
             const SizedBox(height: 4),
             Text(
               "View and manage erasure compliance reports",
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 12, color: _bodyGreyColor),
             ),
           ],
         ),
-        // [CHANGED - Report Settings border] Normal state keeps the default
-        // grey border; on hover the border (only the border, not a full
-        // background swap) turns teal-green via hoverBorderColor.
         _HoverButton(
           text: "Report Settings",
           icon: Icons.settings,
@@ -633,34 +593,30 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
  
-  // ================= 4. MAIN TABLE CONTAINER =================
   Widget _buildMainTableContainer() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.shade300),
+        color: _cardBg, // CHANGED: was Colors.white
+        border: Border.all(color: _cardBorder), // CHANGED: was Colors.grey.shade300
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         children: [
           _buildTableToolbar(),
-          Divider(color: Colors.grey.shade300, height: 1),
+          Divider(color: _cardBorder, height: 1),
           _buildTableHeader(),
-          Divider(color: Colors.grey.shade300, height: 1),
-          // [CHANGED - Empty state] When a date filter narrows the results
-          // down to nothing, the 7-column rows are replaced by the
-          // "No reports found matching the current filters" message.
+          Divider(color: _cardBorder, height: 1),
           Expanded(
             child: _filteredData.isEmpty
                 ? Center(
                     child: Text(
                       "No reports found matching the current filters",
-                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      style: TextStyle(color: _bodyGreyColor, fontSize: 13),
                     ),
                   )
                 : ListView.separated(
                     itemCount: _filteredData.length,
-                    separatorBuilder: (context, index) => Divider(color: Colors.grey.shade200, height: 1),
+                    separatorBuilder: (context, index) => Divider(color: _cardBorder.withOpacity(0.6), height: 1),
                     itemBuilder: (context, index) {
                       return _buildTableRow(_filteredData[index]);
                     },
@@ -671,23 +627,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
  
-  // ================= 4.1 TABLE TOOLBAR =================
   Widget _buildTableToolbar() {
-    // [CHANGED - Header/toolbar background] The whole toolbar strip (Select
-    // All, Search box, both date filters, All Reports dropdown) now sits on
-    // a grey background instead of white. Only a background color + the
-    // existing padding wrapper were added — none of the child widgets,
-    // their logic, or their onChanged/onTap callbacks were touched.
     return Container(
-      color: Colors.grey.shade100,
+      color: _toolbarBg, // CHANGED: was Colors.grey.shade100
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           children: [
-            // [CHANGED - Point 6 / header background] Select All no longer
-            // has its own separate grey chip — it now sits directly on the
-            // toolbar's grey background. "Select All" still comes before
-            // the "N selected" count, count still normal-weight teal-green.
             Checkbox(
               value: _isAllSelected,
               activeColor: _tealGreen,
@@ -703,7 +649,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 });
               },
             ),
-            Text("Select All", style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+            Text("Select All", style: TextStyle(color: _bodyGreyColor, fontSize: 12)),
             if (_selectedRows.isNotEmpty) ...[
               const SizedBox(width: 8),
               Text(
@@ -712,16 +658,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
             ],
               const SizedBox(width: 24),
- 
-            // Search Box
             Expanded(
               flex: 2,
               child: SizedBox(
                 height: 36,
                 child: TextField(
-                  // [CHANGED - Search box cursor] Blinking text cursor
-                  // color set to teal-green.
                   cursorColor: _tealGreen,
+                  style: TextStyle(color: _headingColor),
                   decoration: InputDecoration(
                     hintText: "Search reports...",
                     hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
@@ -732,33 +675,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       borderSide: BorderSide(color: _tealGreen),
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    fillColor: Colors.white,
+                    fillColor: _cardBg, // CHANGED: was Colors.white
                     filled: true,
                   ),
                 ),
               ),
             ),
             const SizedBox(width: 16),
- 
-            // Date Filters
-            // [CHANGED - Calendar popups] Each date button is now wrapped in
-            // a CompositedTransformTarget (via _buildDateButton) and opens
-            // the custom calendar popup on tap.
             _buildDateButton(_formatDate(_startDate), _startDateLink, () => _openCalendarPopup(context, _startDateLink, true)),
             const SizedBox(width: 8),
             _buildDateButton(_formatDate(_endDate), _endDateLink, () => _openCalendarPopup(context, _endDateLink, false)),
             const SizedBox(width: 16),
- 
-            // Report Type Filter
-            // [CHANGED - Custom dropdown popup] Replaced the native
-            // DropdownButton with a button that opens a custom hoverable
-            // popup list (see _openReportTypeDropdown).
             _buildReportTypeButton(context),
- 
             const SizedBox(width: 8),
-            // Clear Filter Cross
-            // [CHANGED - Clear also resets date filters] Now clears the
-            // selected date range too, so the full 7-column table returns.
             IconButton(
               icon: const Icon(Icons.close, size: 20, color: Colors.grey),
               onPressed: () {
@@ -776,9 +705,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
  
   Widget _buildDateButton(String text, LayerLink link, VoidCallback onTap) {
-    // [CHANGED - Calendar popup trigger] Wrapped in CompositedTransformTarget
-    // so the popup can anchor to this exact button, and the whole button
-    // (not just the calendar icon) now opens the popup on tap.
     return CompositedTransformTarget(
       link: link,
       child: MouseRegion(
@@ -788,24 +714,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
           child: Container(
             height: 36,
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            // [CHANGED - White background] Explicit white fill so the button
-            // reads as white instead of blending into the grey toolbar strip
-            // behind it. Border stays grey, text stays grey — unchanged.
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.grey.shade300),
+              color: _cardBg, // CHANGED: was Colors.white
+              border: Border.all(color: _cardBorder), // CHANGED: was Colors.grey.shade300
               borderRadius: BorderRadius.circular(4),
             ),
             child: Row(
-              // [CHANGED - Points 3 & 4] Calendar icon moved from the left side to
-              // the right side of the date button. Text stays on the left. Same
-              // container width/height/border/background and same click target as
-              // before — only the child order + alignment changed.
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(text, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                Text(text, style: TextStyle(color: _bodyGreyColor, fontSize: 13)),
                 const SizedBox(width: 8),
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                Icon(Icons.calendar_today, size: 16, color: _bodyGreyColor),
               ],
             ),
           ),
@@ -824,17 +743,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
           child: Container(
             height: 36,
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            // [CHANGED - White background] Same explicit white fill as the
-            // date buttons; border/text stay grey.
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.grey.shade300),
+              color: _cardBg, // CHANGED: was Colors.white
+              border: Border.all(color: _cardBorder), // CHANGED: was Colors.grey.shade300
               borderRadius: BorderRadius.circular(4),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(_selectedFilter, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                Text(_selectedFilter, style: TextStyle(fontSize: 13, color: _bodyGreyColor)),
                 const SizedBox(width: 8),
                 const Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.grey),
               ],
@@ -845,14 +762,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
  
-  // ================= 6. TABLE HEADER =================
   Widget _buildTableHeader() {
     return Container(
-      color: Colors.grey[50],
+      color: _tableHeaderBg, // CHANGED: was Colors.grey[50]
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Row(
         children: [
-          const SizedBox(width: 48), // Space for checkbox
+          const SizedBox(width: 48),
           Expanded(flex: 2, child: _buildSortableHeader("Report ID")),
           Expanded(flex: 2, child: _buildSortableHeader("Report Type")),
           Expanded(flex: 1, child: _buildSortableHeader("Total Items")),
@@ -865,16 +781,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
  
   Widget _buildSortableHeader(String title) {
-    // [NEW - Column sorting] Highlights the active sort column with a
-    // teal-green up/down arrow (matching direction); every other column
-    // keeps the neutral grey "unfold" icon.
     final bool isActive = _sortColumn == title;
     return InkWell(
       onTap: () => _toggleSort(title),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(title, style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w600)),
+          Text(title, style: TextStyle(color: _bodyGreyColor, fontSize: 12, fontWeight: FontWeight.w600)),
           const SizedBox(width: 4),
           Icon(
             isActive
@@ -888,39 +801,26 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
  
-  // ================= 7. TABLE DATA ROWS =================
-  // [CHANGED - Row keyed by id] Takes the row's data map only (no index),
-  // since selection now tracks by report id instead of list position.
   Widget _buildTableRow(Map<String, dynamic> data) {
     final String id = data['id'] as String;
     bool isSelected = _selectedRows.contains(id);
     int failedItems = data['failed'];
  
     return Material(
-      color: Colors.white,
+      color: _cardBg, // CHANGED: was Colors.white
       child: InkWell(
-        hoverColor: Colors.grey[100],
+        hoverColor: _rowHoverBg, // CHANGED: was Colors.grey[100]
         onTap: () {
           setState(() {
             isSelected ? _selectedRows.remove(id) : _selectedRows.add(id);
           });
         },
         child: Padding(
-          // [CHANGED - Point: row height] Row height reduced further
-          // (28 -> 22) after first shrinking the row text (13 -> 11), so
-          // text stays legible while the row itself gets noticeably more
-          // compact. Text stays vertically centered via the SizedBox +
-          // Row's default cross-axis alignment. Columns/data untouched.
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: SizedBox(
             height: 22,
             child: Row(
               children: [
-                // [CHANGED - Point: row height] Checkbox visual density
-                // pushed to the maximum compact value (-4, -4, the most
-                // negative Flutter allows) so its tap target doesn't force
-                // the row taller than the fixed 22px height above. Same
-                // value/onChanged/activeColor as before.
                 Checkbox(
                   value: isSelected,
                   activeColor: _tealGreen,
@@ -940,9 +840,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     textStyle: const TextStyle(color: Colors.white, fontSize: 12),
                     child: Row(
                       children: [
-                        Icon(Icons.description_outlined, size: 13, color: Colors.grey[600]),
+                        Icon(Icons.description_outlined, size: 13, color: _bodyGreyColor),
                         const SizedBox(width: 6),
-                        Text(data['id'], style: TextStyle(color: Colors.grey[800], fontSize: 11)),
+                        Text(data['id'], style: TextStyle(color: _headingColor, fontSize: 11)),
                       ],
                     ),
                   ),
@@ -953,7 +853,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     message: data['type'].toString(),
                     decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(4)),
                     textStyle: const TextStyle(color: Colors.white, fontSize: 12),
-                    child: Text(data['type'], style: TextStyle(color: Colors.grey[700], fontSize: 11)),
+                    child: Text(data['type'], style: TextStyle(color: _bodyGreyColor, fontSize: 11)),
                   ),
                 ),
                 Expanded(
@@ -962,12 +862,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     message: data['total'].toString(),
                     decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(4)),
                     textStyle: const TextStyle(color: Colors.white, fontSize: 12),
-                    child: Text(data['total'].toString(), style: TextStyle(color: Colors.grey[700], fontSize: 11)),
+                    child: Text(data['total'].toString(), style: TextStyle(color: _bodyGreyColor, fontSize: 11)),
                   ),
                 ),
-                // [CHANGED - Erased Items color] Now uses the app's
-                // teal-green accent color, and font weight is normal
-                // (not bold) to match the rest of the row's text.
                 Expanded(
                   flex: 1,
                   child: Tooltip(
@@ -983,7 +880,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     message: failedItems.toString(),
                     decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(4)),
                     textStyle: const TextStyle(color: Colors.white, fontSize: 12),
-                    child: Text(failedItems.toString(), style: TextStyle(color: failedItems > 0 ? Colors.red : Colors.grey[700], fontSize: 11)),
+                    child: Text(failedItems.toString(), style: TextStyle(color: failedItems > 0 ? Colors.red : _bodyGreyColor, fontSize: 11)),
                   ),
                 ),
                 Expanded(
@@ -992,7 +889,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     message: data['date'].toString(),
                     decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(4)),
                     textStyle: const TextStyle(color: Colors.white, fontSize: 12),
-                    child: Text(data['date'], style: TextStyle(color: Colors.grey[700], fontSize: 11)),
+                    child: Text(data['date'], style: TextStyle(color: _bodyGreyColor, fontSize: 11)),
                   ),
                 ),
               ],
@@ -1003,7 +900,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
  
-  // ================= 10. FOOTER BUTTONS =================
   Widget _buildFooterButtons() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -1017,7 +913,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
  
-  // ================= 2. SETTINGS DIALOG =================
   void _showReportSettingsDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -1052,29 +947,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
             ),
           ),
           actions: [
-            // [CHANGED - Report Settings Cancel button] Replaced the plain
-            // TextButton with the new rectangular hover button: grey
-            // background normally, full teal-green fill on hover. Same
-            // onPressed (Navigator.pop) as before.
             _RectHoverButton(
               text: "Cancel",
               onTap: () => Navigator.pop(context),
             ),
             ElevatedButton(
-              // [CHANGED - Save Settings button] Explicit rectangle shape
-              // added (radius 4) so it doesn't fall back to the theme's
-              // default rounded/stadium shape. Background stays full
-              // teal-green as before.
               style: ElevatedButton.styleFrom(
                 backgroundColor: _tealGreen,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
               ),
               onPressed: () {
                 Navigator.pop(context);
-                // [CHANGED - Success toast] Now uses the shared toast-stack
-                // system (_showToast) instead of a one-off SnackBar, so it
-                // renders in the exact same top-right spot, with the same
-                // look, as every other toast in this screen.
                 _showToast("Settings saved successfully");
               },
               child: const Text("Save Settings", style: TextStyle(color: Colors.white)),
@@ -1095,11 +978,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
           const SizedBox(height: 6),
           TextFormField(
             initialValue: defaultVal,
-            // [CHANGED - Settings dialog inputs] Blinking text cursor color
-            // set to teal-green. Since all 3 fields (Custom Report Header
-            // Text / Data Erasure Certificate, Default Technician Name /
-            // James Anderson, Default Validator Name / Sarah Mitchell) call
-            // this same builder, this one line covers all three.
             cursorColor: _tealGreen,
             decoration: InputDecoration(
               filled: true,
@@ -1132,9 +1010,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   alignment: Alignment.centerLeft,
                   decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(4)),
-                  // [CHANGED - Upload buttons] Shows the picked file's name
-                  // once one is selected, instead of always saying
-                  // "No files selected".
                   child: Text(
                     pickedFile ?? "No files selected",
                     style: TextStyle(color: pickedFile != null ? Colors.grey[800] : Colors.grey[400], fontSize: 13),
@@ -1143,13 +1018,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              // [CHANGED - Upload buttons] Clicking Upload now opens the
-              // native OS file browser ("This PC" folder window) via the
-              // file_picker package, instead of doing nothing. Opens on
-              // CLICK (not hover) — file dialogs always trigger on click in
-              // every OS/browser, since opening one on mere mouse-hover
-              // would pop it up constantly as the cursor moves across the
-              // screen. Same rectangular grey/teal-hover look as before.
               _RectHoverButton(
                 text: "Upload",
                 onTap: () async {
@@ -1169,24 +1037,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 }
  
-// Reusable Custom Hover Button Component
 class _HoverButton extends StatefulWidget {
   final String text;
   final IconData icon;
   final VoidCallback? onTap;
-  // [CHANGED - Footer buttons request] When true: no background/border in
-  // the normal state, and the ENTIRE button fills solid teal-green (with
-  // white text/icon) on hover. Defaults to false so "Report Settings"
-  // keeps its existing grey-normal / pale-green-hover look untouched.
   final bool fullTealHover;
-  // [CHANGED - Report Settings border] Optional fixed border color for the
-  // NORMAL (non-hover) state. Left null for every other button so their
-  // grey border is unaffected.
   final Color? borderColor;
-  // [CHANGED - Report Settings hover border] Optional border color used
-  // ONLY while hovered, independent of the hover background. Left null for
-  // every other button; passed as teal-green for Report Settings so just
-  // its border (not the background) turns teal-green on hover.
   final Color? hoverBorderColor;
  
   const _HoverButton({
@@ -1207,14 +1063,6 @@ class __HoverButtonState extends State<_HoverButton> {
  
   @override
   Widget build(BuildContext context) {
-    // [CHANGED - Footer buttons no longer look like buttons] Normal state
-    // now uses the SAME visible grey background + grey border for both
-    // variants (previously the footer/fullTealHover variant had no
-    // background or border at all, so it didn't read as a button). Only
-    // the HOVER fill still differs: Report Settings (fullTealHover: false)
-    // keeps its pale-green hover + teal text/icon; Preview/Upload/Save PDF
-    // (fullTealHover: true) get a full solid teal-green hover fill with
-    // white text/icon.
     final Color hoverBg = widget.fullTealHover ? const Color(0xFF009688) : const Color(0xFFE8F5E9);
     final Color normalContentColor = Colors.grey.shade600;
     final Color hoverContentColor = widget.fullTealHover ? Colors.white : const Color(0xFF009688);
@@ -1252,12 +1100,6 @@ class __HoverButtonState extends State<_HoverButton> {
   }
 }
  
-// [CHANGED - Upload buttons & Settings-dialog Cancel button]
-// Reusable rectangular, text-only hover button: grey background normally,
-// and on hover the ENTIRE button fills solid teal-green with white text.
-// Kept as its own small widget (rather than editing _HoverButton) so the
-// Report Settings button and the 3 footer buttons, which already use
-// _HoverButton, are completely unaffected.
 class _RectHoverButton extends StatefulWidget {
   final String text;
   final VoidCallback? onTap;
@@ -1283,7 +1125,7 @@ class __RectHoverButtonState extends State<_RectHoverButton> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             color: _isHovered ? const Color(0xFF009688) : Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(4), // rectangle, not pill/stadium
+            borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
             widget.text,
@@ -1298,10 +1140,6 @@ class __RectHoverButtonState extends State<_RectHoverButton> {
   }
 }
  
-// [NEW - Report type dropdown popup item] One row inside the custom
-// "All Reports" popup. Highlights solid teal-green with white text on
-// hover, and stays highlighted while it is the selected filter (with a
-// small check icon), matching the reference screenshot.
 class _DropdownHoverItem extends StatefulWidget {
   final String text;
   final bool selected;
@@ -1357,10 +1195,6 @@ class _DropdownHoverItemState extends State<_DropdownHoverItem> {
   }
 }
  
-// [NEW - Calendar popup] Custom date-picker popup used by both the start and
-// end date buttons in the toolbar. Supports day / month / year views (via
-// the clickable header) and up/down arrow navigation, plus a Clear / Today
-// footer, all in teal-green to match the app's accent color.
 enum _CalMode { day, month, year }
  
 class _CalendarPopup extends StatefulWidget {
@@ -1384,7 +1218,7 @@ class _CalendarPopup extends StatefulWidget {
  
 class _CalendarPopupState extends State<_CalendarPopup> {
   late int _year;
-  late int _month; // 1-12
+  late int _month;
   DateTime? _selected;
   _CalMode _mode = _CalMode.day;
  
@@ -1441,9 +1275,6 @@ class _CalendarPopupState extends State<_CalendarPopup> {
  
   @override
   Widget build(BuildContext context) {
-    // [CHANGED - Shorter popup] Outer padding and the gaps between header /
-    // grid / footer are all tightened so the popup takes noticeably less
-    // vertical space overall.
     return Container(
       width: 280,
       padding: const EdgeInsets.all(8),
@@ -1498,9 +1329,6 @@ class _CalendarPopupState extends State<_CalendarPopup> {
           ),
         ),
         Row(
-          // [CHANGED - up/down navigation] Both arrows are fully clickable
-          // and step the calendar backward/forward through whichever view
-          // (day -> month, month -> year, year -> 12-year block) is active.
           children: [
             _NavArrowButton(icon: Icons.keyboard_arrow_up, onTap: _prev),
             const SizedBox(width: 4),
@@ -1515,7 +1343,7 @@ class _CalendarPopupState extends State<_CalendarPopup> {
     final daysInMonth = DateTime(_year, _month + 1, 0).day;
     final prevMonthDays = DateTime(_year, _month, 0).day;
     final firstOfMonth = DateTime(_year, _month, 1);
-    final leadingDays = firstOfMonth.weekday % 7; // Sun = 0
+    final leadingDays = firstOfMonth.weekday % 7;
     final totalCells = ((leadingDays + daysInMonth) / 7).ceil() * 7;
  
     final today = DateTime.now();
@@ -1577,8 +1405,6 @@ class _CalendarPopupState extends State<_CalendarPopup> {
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 1,
           crossAxisSpacing: 1,
-          // [CHANGED - Shorter popup] Slightly flatter than square so each
-          // week row takes a bit less vertical space.
           childAspectRatio: 1.25,
           children: cells,
         ),
@@ -1637,8 +1463,6 @@ class _CalendarPopupState extends State<_CalendarPopup> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // [CHANGED - Clear / Today] Both clickable, teal-green, left/right
-        // aligned in the popup footer as requested.
         _TextLinkButton(
           text: "Clear",
           tealGreen: widget.tealGreen,
@@ -1668,8 +1492,6 @@ class _CalendarPopupState extends State<_CalendarPopup> {
   }
 }
  
-// [NEW] Small circular hover button used for the calendar's up/down
-// navigation arrows.
 class _NavArrowButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -1704,10 +1526,6 @@ class _NavArrowButtonState extends State<_NavArrowButton> {
   }
 }
  
-// [NEW] A single day cell in the calendar grid.
-// - Hover (unselected): light-grey circle background.
-// - Selected: teal-green rectangle background with a black border.
-// - Today (unselected): bold label so it stands out subtly.
 class _DayCell extends StatefulWidget {
   final String label;
   final bool dimmed;
@@ -1778,9 +1596,6 @@ class _DayCellState extends State<_DayCell> {
   }
 }
  
-// [NEW] A month or year cell used in the calendar's month-view / year-view
-// grids. Active (currently focused) cell and hover both use a teal-green
-// fill, matching the reference screenshots.
 class _GridChoiceCell extends StatefulWidget {
   final String label;
   final bool isActive;
@@ -1828,8 +1643,6 @@ class _GridChoiceCellState extends State<_GridChoiceCell> {
   }
 }
  
-// [NEW] The "Clear" / "Today" text links in the calendar footer — teal-green,
-// underline on hover so they read as clickable.
 class _TextLinkButton extends StatefulWidget {
   final String text;
   final Color tealGreen;
@@ -1866,8 +1679,6 @@ class _TextLinkButtonState extends State<_TextLinkButton> {
   }
 }
  
-// [NEW - Toast notifications] Plain data holder for one toast card: a
-// unique id (so a specific card can be dismissed) and its message text.
 class _ToastItem {
   final String id;
   final String message;

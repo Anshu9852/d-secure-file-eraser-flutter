@@ -151,7 +151,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             const VolumeEraserScreen(),
                             const DeletedDataEraserScreen(),
                             const SchedulerScreen(),
-                            const ReportsScreen(), // Sirf yeh naya addition hai
+                            // CHANGED: ab themeMode pass ho raha hai, taaki
+                            // Reports page bhi sidebar/Cloud Erase ki tarah
+                            // sabhi 4 themes follow kare.
+                            ReportsScreen(themeMode: themeMode),
                             // CHANGED: ab poora themeMode pass ho raha hai
                             // (sirf isDark bool nahi), taaki Cloud Erase page
                             // bhi sabhi 4 themes (Light/Dark/DSecure/DSecure
