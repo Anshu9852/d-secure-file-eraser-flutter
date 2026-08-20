@@ -80,8 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case AppThemeMode.greenDark:
         return const Color(0xFF1E293B);
       case AppThemeMode.greenLight:
-        // Halka mint background — poore page (scaffold/sidebar) jaisa hi.
-        return AppColors.greenLightBg;
+        return AppColors.greenLightCard;
       case AppThemeMode.light:
         return const Color(0xFFF1F5F9);
     }
@@ -153,7 +152,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             const DeletedDataEraserScreen(),
                             const SchedulerScreen(),
                             const ReportsScreen(), // Sirf yeh naya addition hai
-                            const CloudEraseScreen(), // Cloud Erase screen ab yahan wired hai
+                            // CHANGED: ab poora themeMode pass ho raha hai
+                            // (sirf isDark bool nahi), taaki Cloud Erase page
+                            // bhi sabhi 4 themes (Light/Dark/DSecure/DSecure
+                            // Light) sahi se follow kare, sidebar ki tarah.
+                            CloudEraseScreen(themeMode: themeMode),
+                            // CHANGED: onThemeModeChanged bhi pass ho raha
+                            // hai, taaki Appearance tab ke 4 boxes click
+                            // karne par poore app ka themeMode turant update
+                            // ho jaye (sidebar/dashboard/cloud erase sab).
                             SettingsScreen(
                               themeMode: themeMode,
                               onThemeModeChanged: _onThemeToggle,

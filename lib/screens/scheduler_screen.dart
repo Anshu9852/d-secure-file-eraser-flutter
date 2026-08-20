@@ -1751,69 +1751,88 @@ class _CustomDropdownState extends State<_CustomDropdown> {
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: const Color(0xFFD1D5DB)),
                 ),
-                child: Scrollbar(
-                  controller: _listScrollController,
-                  thumbVisibility: true,
-                  child: ListView.builder(
-                    controller: _listScrollController,
-                    padding: EdgeInsets.zero,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: widget.items.length,
-                    itemBuilder: (context, index) {
-                      final item = widget.items[index];
-                      final isSelected = item == widget.value;
-                      final isHovered = _hoveredIndex == index;
+                // [CHANGED - HOVER FIX] Wrapped the list in a StatefulBuilder.
+                // An OverlayEntry's `builder` is NOT automatically rebuilt when
+                // the widget that inserted it (_CustomDropdownState) calls
+                // setState — so updating `_hoveredIndex` via the outer setState
+                // never actually repainted the overlay, and the teal-green
+                // hover color never showed up for Frequency OR Erasure Method,
+                // in either the Create Task or Edit Task popup. Using
+                // setOverlayState (from StatefulBuilder) instead rebuilds this
+                // overlay subtree directly, so the hover color now applies
+                // immediately and correctly everywhere this dropdown is used.
+                child: StatefulBuilder(
+                  builder: (context, setOverlayState) {
+                    return Scrollbar(
+                      controller: _listScrollController,
+                      thumbVisibility: true,
+                      child: ListView.builder(
+                        controller: _listScrollController,
+                        padding: EdgeInsets.zero,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: widget.items.length,
+                        itemBuilder: (context, index) {
+                          final item = widget.items[index];
+                          final isSelected = item == widget.value;
+                          final isHovered = _hoveredIndex == index;
  
-                      // [CHANGED - Point 4] Row content is wrapped in Expanded. For
-                      // scrollable lists (e.g. Erasure Method) a reserved 14px strip
-                      // is left on the right (outside the MouseRegion) so hovering the
-                      // scrollbar itself does NOT trigger the teal hover color on the
-                      // row underneath. Non-scrollable lists (e.g. Frequency) skip the
-                      // strip entirely so the hover fills the full button width edge
-                      // to edge, matching the selected ("Daily") row's look.
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: MouseRegion(
-                              onEnter: (_) => setState(() => _hoveredIndex = index),
-                              onExit: (_) => setState(() => _hoveredIndex = null),
-                              child: InkWell(
-                                onTap: () {
-                                  widget.onChanged(item);
-                                  _closeDropdown();
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: isHovered ? const Color(0xFF0F766E) : Colors.transparent,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          item,
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: isHovered ? Colors.white : const Color(0xFF374151),
-                                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                          ),
+                          // [CHANGED - full-width hover color] The teal hover
+                          // background now fills the ENTIRE row edge-to-edge
+                          // (right side included) via the outer Container,
+                          // instead of stopping short at the reserved strip —
+                          // that was making the highlight look "cut in half".
+                          // The hover-TRIGGER area (MouseRegion) still only
+                          // covers the main content region, not the scrollbar
+                          // strip — so hovering exactly over the scrollbar
+                          // itself still doesn't light up the row, but hovering
+                          // anywhere on the actual content colors the full row.
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: isHovered ? const Color(0xFF0F766E) : Colors.transparent,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: MouseRegion(
+                                    onEnter: (_) => setOverlayState(() => _hoveredIndex = index),
+                                    onExit: (_) => setOverlayState(() => _hoveredIndex = null),
+                                    child: InkWell(
+                                      onTap: () {
+                                        widget.onChanged(item);
+                                        _closeDropdown();
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                item,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  color: isHovered ? Colors.white : const Color(0xFF374151),
+                                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                                ),
+                                              ),
+                                            ),
+                                            if (isSelected)
+                                              Icon(Icons.check, size: 14, color: isHovered ? Colors.white : const Color(0xFF0F766E)),
+                                          ],
                                         ),
                                       ),
-                                      if (isSelected)
-                                        Icon(Icons.check, size: 14, color: isHovered ? Colors.white : const Color(0xFF0F766E)),
-                                    ],
+                                    ),
                                   ),
                                 ),
-                              ),
+                                const SizedBox(width: 18),
+                              ],
                             ),
-                          ),
-                          if (widget.isScrollableList) const SizedBox(width: 14),
-                        ],
-                      );
-                    },
-                  ),
+                          );
+                        },
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

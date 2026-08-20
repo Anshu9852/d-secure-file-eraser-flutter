@@ -1,24 +1,14 @@
 import 'package:flutter/material.dart';
+import '../theme/theme.dart';
  
 /// Cloud Erase screen — matches the "Cloud Erase" section of the
 /// D-Secure File Eraser UI shown in the reference screenshots.
-///
-/// Usage (inside home_screen.dart sidebar navigation):
-///
-///   onTap: () {
-///     setState(() {
-///       _selectedScreen = const CloudEraseScreen();
-///     });
-///   }
-///
-/// or, if you're using named routes / Navigator.push:
-///
-///   Navigator.push(
-///     context,
-///     MaterialPageRoute(builder: (_) => const CloudEraseScreen()),
-///   );
 class CloudEraseScreen extends StatefulWidget {
-  const CloudEraseScreen({super.key});
+  // CHANGED: bool isDark -> AppThemeMode themeMode, so this page can follow
+  // all 4 app themes (Light / Dark / DSecure / DSecure Light) instead of
+  // only a plain dark/light switch.
+  final AppThemeMode themeMode;
+  const CloudEraseScreen({super.key, required this.themeMode});
  
   @override
   State<CloudEraseScreen> createState() => _CloudEraseScreenState();
@@ -55,74 +45,170 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
   final ScrollController _tableScrollController = ScrollController();
   late List<_FileNode> _fileTree = _buildInitialFileTree();
  
-  // Vertical offset (from the top of the card's inner content) where the
-  // Google Drive popup should sit — i.e. right below the dropdown row.
-  // ("Cloud Service" label height + spacing + dropdown row height).
   static const double _dropdownPopupTopOffset = 62.0;
  
   // ---- Colours pulled from the screenshots ----
   static const Color pageBackground = Color(0xFFF2F2F2);
   static const Color boxBorderGrey = Color(0xFFD9D9D9);
- 
-  // Note box — light grey-blue background with a light teal-blue border.
   static const Color noteBackground = Color(0xFFE9EFF5);
   static const Color noteBorder = Color(0xFFB7D6DC);
- 
-  // Note icon — simple outlined circle (not filled solid), grey fill,
-  // green ring + green "i" information symbol.
   static const Color noteIconGreen = Color(0xFF3CA55C);
- 
   static const Color infoTextGrey = Color(0xFF6B6B6B);
-  static const Color infoBoxBackground = Color(0xFFECECEC); // grey OAuth box
+  static const Color infoBoxBackground = Color(0xFFECECEC);
   static const Color connectHoverGreen = Color(0xFF2E7D46);
   static const Color popupTeal = Color(0xFF1F7A5C);
- 
-  // ---- Connected account box — same grey-blue style as the Note box ----
-  static const Color connectedBoxBackground = noteBackground; // 0xFFE9EFF5
-  static const Color connectedBoxBorder = noteBorder; // 0xFFB7D6DC
- 
-  // ---- Disconnect button (rectangle, grey) ----
+  static const Color connectedBoxBackground = noteBackground;
+  static const Color connectedBoxBorder = noteBorder;
   static const Color disconnectBg = Color(0xFFE3E3E3);
   static const Color disconnectBgHover = Color(0xFFD3D3D3);
   static const Color disconnectText = Color(0xFF6B6B6B);
+  static const Color eraseModeBoxBg = Color(0xFFF2F2F2);
+  static const Color eraseModeBoxBorder = Color(0xFFD9D9D9);
+  static const Color eraseModeHoverBorder = Color(0xFFA9D8B6);
+  static const Color eraseModeSelectedBg = Color(0xFFDCE6ED);
+  static const Color eraseModeSelectedBorder = Color(0xFF3CA55C);
  
-  // ---- Erase Mode boxes ----
-  static const Color eraseModeBoxBg = Color(0xFFF2F2F2); // default grey bg
-  static const Color eraseModeBoxBorder = Color(0xFFD9D9D9); // default grey border
-  static const Color eraseModeHoverBorder = Color(0xFFA9D8B6); // light green thin border (hover)
-  static const Color eraseModeSelectedBg = Color(0xFFDCE6ED); // grey-blue (selected)
-  static const Color eraseModeSelectedBorder = Color(0xFF3CA55C); // thick green border (selected)
+  // ---- Theme-aware colors driven by the 4-mode AppThemeMode ----
+  bool get _isDarkBase =>
+      widget.themeMode == AppThemeMode.dark || widget.themeMode == AppThemeMode.greenDark;
+ 
+  Color get _pageBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return pageBackground;
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF0F172A);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightBg;
+    }
+  }
+ 
+  Color get _cardBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return Colors.white;
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF1E293B);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightCard;
+    }
+  }
+ 
+  Color get _cardBorder {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return boxBorderGrey;
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF334155);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightBorder;
+    }
+  }
+ 
+  Color get _headingColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return Colors.black;
+      case AppThemeMode.dark:
+        return Colors.white;
+      case AppThemeMode.greenDark:
+        return AppColors.greenDarkText;
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightText;
+    }
+  }
+ 
+  Color get _bodyGreyColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return Colors.grey[600]!;
+      case AppThemeMode.dark:
+        return const Color(0xFF94A3B8);
+      case AppThemeMode.greenDark:
+        return AppColors.greenDarkGreyText;
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightGreyText;
+    }
+  }
+ 
+  Color get _infoChipBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return infoBoxBackground;
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF334155);
+      case AppThemeMode.greenLight:
+        return const Color(0xFFDCFCE7);
+    }
+  }
+ 
+  Color get _tableHeaderBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return const Color(0xFFF5F5F5);
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF243044);
+      case AppThemeMode.greenLight:
+        return const Color(0xFFDCFCE7);
+    }
+  }
+ 
+  Color get _rowHoverBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return Colors.grey[200]!;
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF243044);
+      case AppThemeMode.greenLight:
+        return const Color(0xFFDCFCE7);
+    }
+  }
+ 
+  Color get _rowDividerColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return Colors.grey[300]!;
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF334155);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightBorder;
+    }
+  }
  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: pageBackground,
+      backgroundColor: _pageBg,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(28, 24, 28, 40),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ---------- Heading ----------
-              const Text(
+              Text(
                 'Cloud Erase',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: _headingColor,
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'Securely delete files from cloud storage services',
                 style: TextStyle(
                   fontSize: 13,
-                  color: Colors.grey,
+                  color: _bodyGreyColor,
                 ),
               ),
               const SizedBox(height: 20),
- 
-              // ---------- Note box (light grey-blue, reduced height) ----------
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(
@@ -137,8 +223,6 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Single information icon — circle ring + "i" both
-                    // green, no extra background circle behind it.
                     const Padding(
                       padding: EdgeInsets.only(top: 2),
                       child: Icon(
@@ -174,14 +258,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                   ],
                 ),
               ),
- 
               const SizedBox(height: 24),
- 
-              // ---------- Single Cloud Service box (white) ----------
-              // Contains: "Cloud Service" label, Google Drive selector,
-              // the grey OAuth strip, and the "Connect to Google Drive" box —
-              // all on the same white background, matching the reference.
-              // Box height slightly increased (more vertical padding).
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(
@@ -189,30 +266,24 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                   vertical: 26,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: boxBorderGrey),
+                  color: _cardBg,
+                  border: Border.all(color: _cardBorder),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                // Outer Stack so the dropdown popup can paint ON TOP of the
-                // OAuth strip / Connect button below it, instead of being
-                // hidden behind them.
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Cloud Service',
                           style: TextStyle(
                             fontSize: 12.5,
-                            color: Colors.grey,
+                            color: _bodyGreyColor,
                           ),
                         ),
                         const SizedBox(height: 8),
- 
-                        // "Google Drive" selector row (popup lives outside
-                        // this Column now — see Positioned below).
                         GestureDetector(
                           onTap: () {
                             setState(
@@ -226,19 +297,19 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white,
-                              border: Border.all(color: boxBorderGrey),
+                              color: _cardBg,
+                              border: Border.all(color: _cardBorder),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Row(
                               mainAxisAlignment:
                                   MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
+                                Text(
                                   'Google Drive',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.black,
+                                    color: _headingColor,
                                   ),
                                 ),
                                 Icon(
@@ -246,21 +317,14 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                                       ? Icons.keyboard_arrow_up
                                       : Icons.keyboard_arrow_down,
                                   size: 20,
-                                  color: Colors.grey[700],
+                                  color: _bodyGreyColor,
                                 ),
                               ],
                             ),
                           ),
                         ),
- 
                         const SizedBox(height: 14),
- 
-                        // ---- Connecting spinner / Connected account box /
-                        // OAuth strip + Connect button — only one of these
-                        // three states is shown at a time. ----
                         if (_isConnecting)
-                          // ---- Loading spinner — same width as the OAuth
-                          // strip / Connect box below it used to take. ----
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 18),
@@ -277,8 +341,6 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                             ),
                           )
                         else if (_isConnected)
-                          // ---- Connected account box — grey-blue, same
-                          // style as the Note box above. ----
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(
@@ -365,8 +427,6 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                             ),
                           )
                         else ...[
-                          // ---- Grey OAuth strip — width hugs the text only,
-                          // rest of the row stays the box's white background ----
                           Align(
                             alignment: Alignment.centerLeft,
                             child: Container(
@@ -375,23 +435,19 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                                 vertical: 10,
                               ),
                               decoration: BoxDecoration(
-                                color: infoBoxBackground,
+                                color: _infoChipBg,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 'Connect to your cloud service to browse and securely erase files. We use OAuth 2.0 authentication - your credentials are never stored.',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: infoTextGrey,
+                                  color: _bodyGreyColor,
                                 ),
                               ),
                             ),
                           ),
- 
                           const SizedBox(height: 14),
- 
-                          // ---- "Connect to Google Drive" — white box on the
-                          // same white page background ----
                           MouseRegion(
                             onEnter: (_) =>
                                 setState(() => _isHoveringConnect = true),
@@ -400,8 +456,6 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                             cursor: SystemMouseCursors.click,
                             child: GestureDetector(
                               onTap: () {
-                                // Start the connect flow: show the spinner,
-                                // then reveal the connected account box.
                                 setState(() {
                                   _isConnecting = true;
                                 });
@@ -425,11 +479,11 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                                 decoration: BoxDecoration(
                                   color: _isHoveringConnect
                                       ? connectHoverGreen
-                                      : Colors.white,
+                                      : _cardBg,
                                   border: Border.all(
                                     color: _isHoveringConnect
                                         ? connectHoverGreen
-                                        : boxBorderGrey,
+                                        : _cardBorder,
                                   ),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
@@ -441,7 +495,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                                       size: 17,
                                       color: _isHoveringConnect
                                           ? Colors.white
-                                          : Colors.grey[700],
+                                          : _bodyGreyColor,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
@@ -451,7 +505,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                                         fontWeight: FontWeight.w500,
                                         color: _isHoveringConnect
                                             ? Colors.white
-                                            : Colors.grey[700],
+                                            : _bodyGreyColor,
                                       ),
                                     ),
                                   ],
@@ -462,10 +516,6 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                         ],
                       ],
                     ),
- 
-                    // ---- Google Drive popup — sits ABOVE / on top of the
-                    // OAuth strip and Connect button (last child of the
-                    // Stack paints last, i.e. on top of everything else). ----
                     if (_isDropdownOpen)
                       Positioned(
                         top: _dropdownPopupTopOffset,
@@ -476,7 +526,6 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                           borderRadius: BorderRadius.circular(4),
                           child: GestureDetector(
                             onTap: () {
-                              // Selecting the option closes the popup.
                               setState(() => _isDropdownOpen = false);
                             },
                             child: Container(
@@ -514,17 +563,14 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                   ],
                 ),
               ),
- 
               if (_isConnected) ...[
                 const SizedBox(height: 24),
- 
-                // ---------- "Erase Mode" section ----------
-                const Text(
+                Text(
                   'Erase Mode',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                    color: _headingColor,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -561,7 +607,6 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                     ],
                   ),
                 ),
- 
                 if (_selectedEraseMode == 0) ...[
                   const SizedBox(height: 16),
                   _buildFileTableSection(),
@@ -576,22 +621,20 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                 ],
               ] else ...[
                 const SizedBox(height: 60),
- 
-                // ---------- "Select a service to connect" placeholder ----------
                 Center(
                   child: Column(
                     children: [
                       Icon(
                         Icons.cloud_outlined,
                         size: 46,
-                        color: Colors.grey[400],
+                        color: _bodyGreyColor,
                       ),
                       const SizedBox(height: 10),
                       Text(
                         'Select a service to connect',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey[500],
+                          color: _bodyGreyColor,
                         ),
                       ),
                     ],
@@ -605,9 +648,6 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
     );
   }
  
-  // ---- One of the three "Erase Mode" boxes (Files & Folders / Erase
-  // Account / Deleted Files). Grey by default, thin light-green border on
-  // hover, grey-blue background + thick green border when selected. ----
   Widget _eraseModeBox({
     required int index,
     required IconData icon,
@@ -617,7 +657,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
     bool isSelected = _selectedEraseMode == index;
     bool isHovered = _hoveredEraseMode == index;
  
-    Color bg = isSelected ? eraseModeSelectedBg : eraseModeBoxBg;
+    Color bg = isSelected ? eraseModeSelectedBg : _cardBg;
     Color borderColor;
     double borderWidth;
     if (isSelected) {
@@ -627,7 +667,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
       borderColor = eraseModeHoverBorder;
       borderWidth = 1.0;
     } else {
-      borderColor = eraseModeBoxBorder;
+      borderColor = _cardBorder;
       borderWidth = 1.0;
     }
  
@@ -652,10 +692,10 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
               const SizedBox(height: 8),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black,
+                  color: _headingColor,
                 ),
               ),
               const SizedBox(height: 2),
@@ -663,7 +703,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                 subtitle,
                 style: TextStyle(
                   fontSize: 10.5,
-                  color: Colors.grey[600],
+                  color: _bodyGreyColor,
                 ),
               ),
             ],
@@ -673,21 +713,14 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
     );
   }
  
-  // ==================== Erase Account section ====================
-  // Google Drive storage box (Total Size / Used / Free + usage bar) and the
-  // "Erase All Account Data" button — shown when the "Erase Account" mode
-  // box is selected.
- 
   static const Color _accountCloudIconBg = Color(0xFFFBE1E1);
   static const Color _accountCloudIconRed = Color(0xFFDC2626);
-  static const Color _accountNormalRed = Color(0xFFE0524F); // normal (not dark) red
+  static const Color _accountNormalRed = Color(0xFFE0524F);
   static const Color _accountUsageTrack = Color(0xFFD7DEE8);
-  static const double _accountIconIndent = 52; // icon box width + gap
- 
-  // ---- Deleted Files box colours ----
+  static const double _accountIconIndent = 52;
   static const Color _deletedAmber = Color(0xFFF59E0B);
-  static const Color _deletedBtnDisabled = Color(0xFFB9DDD4); // pale teal
-  static const Color _deletedBtnHover = Color(0xFF1F6B4F); // full hover green
+  static const Color _deletedBtnDisabled = Color(0xFFB9DDD4);
+  static const Color _deletedBtnHover = Color(0xFF1F6B4F);
  
   Widget _buildEraseAccountSection() {
     final bool isSelected = _isAccountBoxSelected;
@@ -696,12 +729,12 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
     Color borderColor;
     double borderWidth = 1;
     if (isSelected) {
-      borderColor = connectHoverGreen; // teal green
+      borderColor = connectHoverGreen;
       borderWidth = 1.6;
     } else if (isHovered) {
-      borderColor = eraseModeHoverBorder; // light thin green
+      borderColor = eraseModeHoverBorder;
     } else {
-      borderColor = boxBorderGrey;
+      borderColor = _cardBorder;
     }
  
     return Column(
@@ -719,14 +752,13 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: _cardBg,
                 border: Border.all(color: borderColor, width: borderWidth),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ---- Header row: cloud icon + "Google Drive" + tag ----
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -743,13 +775,13 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'Google Drive',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black,
+                            color: _headingColor,
                           ),
                         ),
                       ),
@@ -774,10 +806,6 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                     ],
                   ),
                   const SizedBox(height: 10),
- 
-                  // ---- Total Size + Usage — stacked, left-aligned with
-                  // the "Google Drive" text above (not the icon), so they
-                  // line up with each other. ----
                   Padding(
                     padding: const EdgeInsets.only(left: _accountIconIndent),
                     child: Column(
@@ -787,7 +815,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                           'Total Size',
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.grey[600],
+                            color: _bodyGreyColor,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -795,19 +823,17 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                           '14.0 GB',
                           style: TextStyle(
                             fontSize: 12.5,
-                            color: Colors.grey[700],
+                            color: _bodyGreyColor,
                           ),
                         ),
                         const SizedBox(height: 10),
- 
-                        // ---- "Usage" label + percentage ----
                         Row(
                           children: [
                             Text(
                               'Usage',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.grey[600],
+                                color: _bodyGreyColor,
                               ),
                             ),
                             const Spacer(),
@@ -815,14 +841,12 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                               '56%',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.grey[600],
+                                color: _bodyGreyColor,
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 6),
- 
-                        // ---- Usage bar ----
                         ClipRRect(
                           borderRadius: BorderRadius.circular(3),
                           child: SizedBox(
@@ -849,11 +873,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
             ),
           ),
         ),
- 
         const SizedBox(height: 16),
- 
-        // ---- "Erase All Account Data" — disabled (pale) until the Google
-        // Drive box above is selected, then enabled (solid red). ----
         GestureDetector(
           onTap: isSelected ? _showAccountEraseConfirmDialog : null,
           child: AnimatedContainer(
@@ -892,17 +912,10 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
       context: context,
       barrierDismissible: true,
       builder: (_) => _ConfirmAccountEraseDialog(
-        onConfirmed: () {
-          // TODO: hook up actual "erase all account data" action here.
-        },
+        onConfirmed: () {},
       ),
     );
   }
- 
-  // ==================== Deleted Files section ====================
-  // Google Drive trash box (Items in Trash / Trash Size + warning text) and
-  // the "Erase Deleted Files" button — shown when the "Deleted Files" mode
-  // box is selected.
  
   Widget _buildDeletedFilesSection() {
     final bool isSelected = _isDeletedBoxSelected;
@@ -911,12 +924,12 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
     Color borderColor;
     double borderWidth = 1;
     if (isSelected) {
-      borderColor = connectHoverGreen; // teal green
+      borderColor = connectHoverGreen;
       borderWidth = 1.6;
     } else if (isHovered) {
-      borderColor = eraseModeHoverBorder; // light thin green
+      borderColor = eraseModeHoverBorder;
     } else {
-      borderColor = boxBorderGrey;
+      borderColor = _cardBorder;
     }
  
     return Column(
@@ -935,15 +948,13 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: _cardBg,
                 border: Border.all(color: borderColor, width: borderWidth),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ---- Header row: cloud icon (outline only, teal green)
-                  // + "Google Drive" (grey text) ----
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -965,15 +976,12 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey[700],
+                          color: _headingColor,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
- 
-                  // ---- "Items in Trash" / "Trash Size" columns — indented
-                  // to line up with the "Google Drive" text above. ----
                   Padding(
                     padding: const EdgeInsets.only(left: _accountIconIndent),
                     child: Row(
@@ -987,7 +995,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                                 'Items in Trash',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: Colors.grey[600],
+                                  color: _bodyGreyColor,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -1010,7 +1018,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                                 'Trash Size',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: Colors.grey[600],
+                                  color: _bodyGreyColor,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -1030,8 +1038,6 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
- 
-                  // ---- Warning text ----
                   Padding(
                     padding: const EdgeInsets.only(left: _accountIconIndent),
                     child: Text(
@@ -1049,12 +1055,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
             ),
           ),
         ),
- 
         const SizedBox(height: 16),
- 
-        // ---- "Erase Deleted Files" — disabled (pale teal) until the
-        // Google Drive box above is selected, then enabled (teal green),
-        // hovers to a fuller green. ----
         MouseRegion(
           onEnter: (_) => setState(() => _isHoveringEraseDeletedBtn = true),
           onExit: (_) => setState(() => _isHoveringEraseDeletedBtn = false),
@@ -1102,14 +1103,10 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
       context: context,
       barrierDismissible: true,
       builder: (_) => _ConfirmDeletedFilesEraseDialog(
-        onConfirmed: () {
-          // TODO: hook up actual "erase deleted files" action here.
-        },
+        onConfirmed: () {},
       ),
     );
   }
- 
-  // ==================== Erase confirmation dialog ====================
  
   void _showEraseConfirmDialog(int itemCount) {
     showDialog(
@@ -1117,25 +1114,21 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
       barrierDismissible: true,
       builder: (_) => _ConfirmEraseDialog(
         itemCount: itemCount,
-        onConfirmed: () {
-          // TODO: hook up actual cloud erase action here.
-        },
+        onConfirmed: () {},
       ),
     );
   }
  
-  // ==================== Files & Folders table ====================
+  TextStyle get _tableHeaderTextStyle => TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        color: _headingColor,
+      );
  
-  static const TextStyle _tableHeaderTextStyle = TextStyle(
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
-    color: Colors.black,
-  );
- 
-  static final TextStyle _tableCellTextStyle = TextStyle(
-    fontSize: 11,
-    color: Colors.grey[700],
-  );
+  TextStyle get _tableCellTextStyle => TextStyle(
+        fontSize: 11,
+        color: _bodyGreyColor,
+      );
  
   Widget _buildFileTableSection() {
     int selectedCount = _countSelected(_fileTree);
@@ -1145,14 +1138,13 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: boxBorderGrey),
+        color: _cardBg,
+        border: Border.all(color: _cardBorder),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ---- "Select All" + selected count + Erase Selected button ----
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
@@ -1178,20 +1170,20 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: _isHoveringSelectAll
-                            ? Colors.grey[200]
+                            ? _rowHoverBg
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Row(
                         children: [
                           Icon(Icons.check_box_outlined,
-                              size: 16, color: Colors.grey[700]),
+                              size: 16, color: _bodyGreyColor),
                           const SizedBox(width: 6),
                           Text(
                             'Select All',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[700],
+                              color: _bodyGreyColor,
                             ),
                           ),
                         ],
@@ -1203,7 +1195,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                   children: [
                     Text(
                       '$selectedCount selected',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                      style: TextStyle(fontSize: 12, color: _bodyGreyColor),
                     ),
                     const SizedBox(width: 12),
                     GestureDetector(
@@ -1244,14 +1236,10 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
               ],
             ),
           ),
- 
-          // ---- Divider line (black) ----
           Container(height: 1, color: Colors.black),
- 
-          // ---- Column header row (Name / Path / Size / Items) ----
           Container(
             width: double.infinity,
-            color: const Color(0xFFF5F5F5),
+            color: _tableHeaderBg,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
               children: [
@@ -1338,8 +1326,6 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
               ],
             ),
           ),
- 
-          // ---- Scrollable data rows ----
           SizedBox(
             height: 320,
             child: Scrollbar(
@@ -1378,9 +1364,9 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
       onExit: (_) => setState(() => _hoveredRowKey = null),
       child: Container(
         decoration: BoxDecoration(
-          color: isHovered ? Colors.grey[200] : Colors.transparent,
+          color: isHovered ? _rowHoverBg : Colors.transparent,
           border: Border(
-            bottom: BorderSide(color: Colors.grey[300]!, width: 1),
+            bottom: BorderSide(color: _rowDividerColor, width: 1),
           ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -1415,7 +1401,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                             ? Icons.keyboard_arrow_down
                             : Icons.chevron_right,
                         size: 16,
-                        color: Colors.grey[600],
+                        color: _bodyGreyColor,
                       ),
                     )
                   : const SizedBox.shrink(),
@@ -1425,7 +1411,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                   ? Icons.folder_outlined
                   : Icons.insert_drive_file_outlined,
               size: 16,
-              color: node.isFolder ? noteIconGreen : Colors.grey[500],
+              color: node.isFolder ? noteIconGreen : _bodyGreyColor,
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -1515,8 +1501,6 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
     );
   }
  
-  // ---- Selection helpers ----
- 
   void _toggleNodeSelected(_FileNode node, bool value) {
     setState(() {
       node.selected = value;
@@ -1550,7 +1534,6 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
     return true;
   }
  
-  // ---- Sample file/folder tree (matches the reference screenshots) ----
   List<_FileNode> _buildInitialFileTree() {
     return [
       _FileNode(
@@ -1627,7 +1610,6 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
   }
 }
  
-// ---- Data model for one row in the Files & Folders table ----
 class _FileNode {
   final String name;
   final String path;
@@ -1650,10 +1632,6 @@ class _FileNode {
   });
 }
  
-// ---------------------------------------------------------------------
-// "Confirm Cloud File Erasure" popup — shown when the user taps the
-// (enabled) "Erase Selected" button in the Files & Folders table.
-// ---------------------------------------------------------------------
 class _ConfirmEraseDialog extends StatefulWidget {
   const _ConfirmEraseDialog({
     required this.itemCount,
@@ -1673,14 +1651,13 @@ class _ConfirmEraseDialogState extends State<_ConfirmEraseDialog> {
   bool _isHoveringCancel = false;
   bool _isHoveringConfirm = false;
  
-  // ---- Colours pulled from the reference screenshots ----
   static const Color _warningCircleBg = Color(0xFFFBE1E1);
   static const Color _warningIconRed = Color(0xFFDC2626);
   static const Color _confirmRed = Color(0xFFDC2626);
   static const Color _confirmRedDisabled = Color(0xFFF1B8B8);
   static const Color _confirmRedHover = Color(0xFFB91C1C);
-  static const Color _inputHoverBg = Color(0xFFEAF6EE); // pale/water green
-  static const Color _inputHoverBorder = // teal green
+  static const Color _inputHoverBg = Color(0xFFEAF6EE);
+  static const Color _inputHoverBorder =
       _CloudEraseScreenState.connectHoverGreen;
  
   @override
@@ -1704,7 +1681,6 @@ class _ConfirmEraseDialogState extends State<_ConfirmEraseDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ---- Header: warning icon + title + close (X) ----
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1749,8 +1725,6 @@ class _ConfirmEraseDialogState extends State<_ConfirmEraseDialog> {
                 ],
               ),
               const SizedBox(height: 16),
- 
-              // ---- Body warning text ----
               Text(
                 'You are about to permanently erase ${widget.itemCount} '
                 'item(s) from your cloud storage. Cloud files cannot be '
@@ -1762,8 +1736,6 @@ class _ConfirmEraseDialogState extends State<_ConfirmEraseDialog> {
                 ),
               ),
               const SizedBox(height: 16),
- 
-              // ---- "Type ERASE to confirm:" ----
               RichText(
                 text: TextSpan(
                   style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
@@ -1781,8 +1753,6 @@ class _ConfirmEraseDialogState extends State<_ConfirmEraseDialog> {
                 ),
               ),
               const SizedBox(height: 8),
- 
-              // ---- Confirmation text field ----
               MouseRegion(
                 onEnter: (_) => setState(() => _isHoveringInput = true),
                 onExit: (_) => setState(() => _isHoveringInput = false),
@@ -1814,8 +1784,6 @@ class _ConfirmEraseDialogState extends State<_ConfirmEraseDialog> {
                 ),
               ),
               const SizedBox(height: 20),
- 
-              // ---- Cancel / Confirm buttons ----
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -1928,10 +1896,6 @@ class _ConfirmEraseDialogState extends State<_ConfirmEraseDialog> {
   }
 }
  
-// ---------------------------------------------------------------------
-// "Confirm Cloud Account Erasure" popup — shown when the user taps the
-// (enabled) "Erase All Account Data" button in the Erase Account section.
-// ---------------------------------------------------------------------
 class _ConfirmAccountEraseDialog extends StatefulWidget {
   const _ConfirmAccountEraseDialog({required this.onConfirmed});
  
@@ -1949,14 +1913,13 @@ class _ConfirmAccountEraseDialogState
   bool _isHoveringCancel = false;
   bool _isHoveringConfirm = false;
  
-  // ---- Colours pulled from the reference screenshots ----
   static const Color _warningCircleBg = Color(0xFFFBE1E1);
   static const Color _warningIconRed = Color(0xFFDC2626);
   static const Color _confirmRed = Color(0xFFDC2626);
   static const Color _confirmRedDisabled = Color(0xFFF1B8B8);
   static const Color _confirmRedHover = Color(0xFFB91C1C);
-  static const Color _inputHoverBg = Color(0xFFEAF6EE); // pale/water green
-  static const Color _inputHoverBorder = // teal green
+  static const Color _inputHoverBg = Color(0xFFEAF6EE);
+  static const Color _inputHoverBorder =
       _CloudEraseScreenState.connectHoverGreen;
  
   @override
@@ -1980,7 +1943,6 @@ class _ConfirmAccountEraseDialogState
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ---- Header: warning icon + title + close (X) ----
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -2025,8 +1987,6 @@ class _ConfirmAccountEraseDialogState
                 ],
               ),
               const SizedBox(height: 16),
- 
-              // ---- Body warning text ----
               Text(
                 'You are about to erase all data in Google Drive. This will '
                 'permanently delete all files and folders. This action '
@@ -2038,8 +1998,6 @@ class _ConfirmAccountEraseDialogState
                 ),
               ),
               const SizedBox(height: 16),
- 
-              // ---- "Type ERASE to confirm:" ----
               RichText(
                 text: TextSpan(
                   style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
@@ -2057,8 +2015,6 @@ class _ConfirmAccountEraseDialogState
                 ),
               ),
               const SizedBox(height: 8),
- 
-              // ---- Confirmation text field ----
               MouseRegion(
                 onEnter: (_) => setState(() => _isHoveringInput = true),
                 onExit: (_) => setState(() => _isHoveringInput = false),
@@ -2090,8 +2046,6 @@ class _ConfirmAccountEraseDialogState
                 ),
               ),
               const SizedBox(height: 20),
- 
-              // ---- Cancel / Confirm buttons ----
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -2204,11 +2158,6 @@ class _ConfirmAccountEraseDialogState
   }
 }
  
-// ---------------------------------------------------------------------
-// "Confirm Cloud Trash Erasure" popup — shown when the user taps the
-// (enabled) "Erase Deleted Files" button in the Deleted Files section.
-// Mirrors _ConfirmAccountEraseDialog's layout, size, and behaviour.
-// ---------------------------------------------------------------------
 class _ConfirmDeletedFilesEraseDialog extends StatefulWidget {
   const _ConfirmDeletedFilesEraseDialog({required this.onConfirmed});
  
@@ -2226,14 +2175,13 @@ class _ConfirmDeletedFilesEraseDialogState
   bool _isHoveringCancel = false;
   bool _isHoveringConfirm = false;
  
-  // ---- Colours pulled from the reference screenshots ----
   static const Color _warningCircleBg = Color(0xFFFBE1E1);
   static const Color _warningIconRed = Color(0xFFDC2626);
   static const Color _confirmRed = Color(0xFFDC2626);
   static const Color _confirmRedDisabled = Color(0xFFF1B8B8);
   static const Color _confirmRedHover = Color(0xFFB91C1C);
-  static const Color _inputHoverBg = Color(0xFFEAF6EE); // pale/water green
-  static const Color _inputHoverBorder = // teal green
+  static const Color _inputHoverBg = Color(0xFFEAF6EE);
+  static const Color _inputHoverBorder =
       _CloudEraseScreenState.connectHoverGreen;
  
   @override
@@ -2257,7 +2205,6 @@ class _ConfirmDeletedFilesEraseDialogState
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ---- Header: warning icon + title + close (X) ----
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -2302,8 +2249,6 @@ class _ConfirmDeletedFilesEraseDialogState
                 ],
               ),
               const SizedBox(height: 16),
- 
-              // ---- Body warning text ----
               Text(
                 'You are about to erase all deleted/trashed files in Google '
                 'Drive. This will permanently remove items from the trash. '
@@ -2315,8 +2260,6 @@ class _ConfirmDeletedFilesEraseDialogState
                 ),
               ),
               const SizedBox(height: 16),
- 
-              // ---- "Type ERASE to confirm:" ----
               RichText(
                 text: TextSpan(
                   style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
@@ -2334,8 +2277,6 @@ class _ConfirmDeletedFilesEraseDialogState
                 ),
               ),
               const SizedBox(height: 8),
- 
-              // ---- Confirmation text field ----
               MouseRegion(
                 onEnter: (_) => setState(() => _isHoveringInput = true),
                 onExit: (_) => setState(() => _isHoveringInput = false),
@@ -2367,8 +2308,6 @@ class _ConfirmDeletedFilesEraseDialogState
                 ),
               ),
               const SizedBox(height: 20),
- 
-              // ---- Cancel / Confirm buttons ----
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
