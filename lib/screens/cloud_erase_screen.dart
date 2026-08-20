@@ -52,11 +52,11 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
   static const Color boxBorderGrey = Color(0xFFD9D9D9);
   static const Color noteBackground = Color(0xFFE9EFF5);
   static const Color noteBorder = Color(0xFFB7D6DC);
-  static const Color noteIconGreen = Color(0xFF3CA55C);
+  static const Color noteIconGreen = Color(0xFF0D9488);
   static const Color infoTextGrey = Color(0xFF6B6B6B);
   static const Color infoBoxBackground = Color(0xFFECECEC);
   static const Color connectHoverGreen = Color(0xFF2E7D46);
-  static const Color popupTeal = Color(0xFF1F7A5C);
+  static const Color popupTeal = Color(0xFF0D9488);
   static const Color connectedBoxBackground = noteBackground;
   static const Color connectedBoxBorder = noteBorder;
   static const Color disconnectBg = Color(0xFFE3E3E3);
@@ -64,9 +64,9 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
   static const Color disconnectText = Color(0xFF6B6B6B);
   static const Color eraseModeBoxBg = Color(0xFFF2F2F2);
   static const Color eraseModeBoxBorder = Color(0xFFD9D9D9);
-  static const Color eraseModeHoverBorder = Color(0xFFA9D8B6);
+  static const Color eraseModeHoverBorder = Color(0xFF7CCFC8);
   static const Color eraseModeSelectedBg = Color(0xFFDCE6ED);
-  static const Color eraseModeSelectedBorder = Color(0xFF3CA55C);
+  static const Color eraseModeSelectedBorder = Color(0xFF0D9488);
  
   // ---- Theme-aware colors driven by the 4-mode AppThemeMode ----
   bool get _isDarkBase =>
@@ -80,7 +80,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
       case AppThemeMode.greenDark:
         return const Color(0xFF0F172A);
       case AppThemeMode.greenLight:
-        return AppColors.greenLightBg;
+        return const Color(0xFFE6F7F5);
     }
   }
  
@@ -92,7 +92,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
       case AppThemeMode.greenDark:
         return const Color(0xFF1E293B);
       case AppThemeMode.greenLight:
-        return AppColors.greenLightCard;
+        return const Color(0xFFF4FCFB);
     }
   }
  
@@ -104,7 +104,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
       case AppThemeMode.greenDark:
         return const Color(0xFF334155);
       case AppThemeMode.greenLight:
-        return AppColors.greenLightBorder;
+        return const Color(0xFFB7DFDB);
     }
   }
  
@@ -117,7 +117,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
       case AppThemeMode.greenDark:
         return AppColors.greenDarkText;
       case AppThemeMode.greenLight:
-        return AppColors.greenLightText;
+        return const Color(0xFF0F4F4A);
     }
   }
  
@@ -130,7 +130,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
       case AppThemeMode.greenDark:
         return AppColors.greenDarkGreyText;
       case AppThemeMode.greenLight:
-        return AppColors.greenLightGreyText;
+        return const Color(0xFF5F7775);
     }
   }
  
@@ -142,7 +142,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
       case AppThemeMode.greenDark:
         return const Color(0xFF334155);
       case AppThemeMode.greenLight:
-        return const Color(0xFFDCFCE7);
+        return const Color(0xFFDDF4F2);
     }
   }
  
@@ -154,7 +154,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
       case AppThemeMode.greenDark:
         return const Color(0xFF243044);
       case AppThemeMode.greenLight:
-        return const Color(0xFFDCFCE7);
+        return const Color(0xFFDDF4F2);
     }
   }
  
@@ -166,7 +166,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
       case AppThemeMode.greenDark:
         return const Color(0xFF243044);
       case AppThemeMode.greenLight:
-        return const Color(0xFFDCFCE7);
+        return const Color(0xFFDDF4F2);
     }
   }
  
@@ -178,7 +178,7 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
       case AppThemeMode.greenDark:
         return const Color(0xFF334155);
       case AppThemeMode.greenLight:
-        return AppColors.greenLightBorder;
+        return const Color(0xFFB7DFDB);
     }
   }
  
@@ -196,8 +196,8 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
                 'Cloud Erase',
                 style: TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: _headingColor,
+                  fontWeight: FontWeight.normal,
+                  color: Colors.black,
                 ),
               ),
               const SizedBox(height: 4),
@@ -719,8 +719,8 @@ class _CloudEraseScreenState extends State<CloudEraseScreen> {
   static const Color _accountUsageTrack = Color(0xFFD7DEE8);
   static const double _accountIconIndent = 52;
   static const Color _deletedAmber = Color(0xFFF59E0B);
-  static const Color _deletedBtnDisabled = Color(0xFFB9DDD4);
-  static const Color _deletedBtnHover = Color(0xFF1F6B4F);
+  static const Color _deletedBtnDisabled = Color(0xFFBFE3DE);
+  static const Color _deletedBtnHover = Color(0xFF0F766E);
  
   Widget _buildEraseAccountSection() {
     final bool isSelected = _isAccountBoxSelected;
@@ -1656,7 +1656,7 @@ class _ConfirmEraseDialogState extends State<_ConfirmEraseDialog> {
   static const Color _confirmRed = Color(0xFFDC2626);
   static const Color _confirmRedDisabled = Color(0xFFF1B8B8);
   static const Color _confirmRedHover = Color(0xFFB91C1C);
-  static const Color _inputHoverBg = Color(0xFFEAF6EE);
+  static const Color _inputHoverBg = Color(0xFFE6F7F5);
   static const Color _inputHoverBorder =
       _CloudEraseScreenState.connectHoverGreen;
  
@@ -1918,7 +1918,7 @@ class _ConfirmAccountEraseDialogState
   static const Color _confirmRed = Color(0xFFDC2626);
   static const Color _confirmRedDisabled = Color(0xFFF1B8B8);
   static const Color _confirmRedHover = Color(0xFFB91C1C);
-  static const Color _inputHoverBg = Color(0xFFEAF6EE);
+  static const Color _inputHoverBg = Color(0xFFE6F7F5);
   static const Color _inputHoverBorder =
       _CloudEraseScreenState.connectHoverGreen;
  
@@ -2180,7 +2180,7 @@ class _ConfirmDeletedFilesEraseDialogState
   static const Color _confirmRed = Color(0xFFDC2626);
   static const Color _confirmRedDisabled = Color(0xFFF1B8B8);
   static const Color _confirmRedHover = Color(0xFFB91C1C);
-  static const Color _inputHoverBg = Color(0xFFEAF6EE);
+  static const Color _inputHoverBg = Color(0xFFE6F7F5);
   static const Color _inputHoverBorder =
       _CloudEraseScreenState.connectHoverGreen;
  
