@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import '../theme/theme.dart';
  
 class EraseFilesScreen extends StatefulWidget {
-  final bool isDark;
-  const EraseFilesScreen({super.key, required this.isDark});
+  // [CHANGED] Was `final bool isDark`. Now takes full AppThemeMode so this
+  // page follows DSecure / DSecure Light too, not just plain dark/light.
+  final AppThemeMode themeMode;
+  const EraseFilesScreen({super.key, required this.themeMode});
  
   @override
   State<EraseFilesScreen> createState() => _EraseFilesScreenState();
@@ -48,6 +50,74 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
   final LayerLink _dropdownLink = LayerLink();
   OverlayEntry? _dropdownOverlay;
   final TextEditingController eraseController = TextEditingController();
+ 
+  // [NEW] Theme-aware colors driven by widget.themeMode (4 modes)
+  Color get _bgColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return const Color(0xFFF3F4F6);
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return AppColors.darkBg;
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightBg;
+    }
+  }
+ 
+  Color get _cardBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return AppColors.lightCard;
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return AppColors.darkCard;
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightCard;
+    }
+  }
+ 
+  Color get _textColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return AppColors.lightText;
+      case AppThemeMode.dark:
+        return AppColors.darkText;
+      case AppThemeMode.greenDark:
+        return AppColors.greenDarkText;
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightText;
+    }
+  }
+ 
+  Color get _subTextColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return AppColors.lightGreyText;
+      case AppThemeMode.dark:
+        return AppColors.darkGreyText;
+      case AppThemeMode.greenDark:
+        return AppColors.greenDarkGreyText;
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightGreyText;
+    }
+  }
+ 
+  Color get _borderColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.light:
+        return AppColors.lightBorder;
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return AppColors.darkBorder;
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightBorder;
+    }
+  }
+ 
+  // Backward-compatible dark flag, used where a simple true/false suffices
+  // (e.g. dropdown fill color, divider color).
+  bool get _isDarkBase =>
+      widget.themeMode == AppThemeMode.dark || widget.themeMode == AppThemeMode.greenDark;
  
   @override
   void dispose() {
@@ -181,10 +251,10 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
                       width: 280,
                       constraints: const BoxConstraints(maxHeight: 320),
                       decoration: BoxDecoration(
-                        color: widget.isDark ? AppColors.darkCard : Colors.white,
+                        color: _cardBg,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: widget.isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                          color: _borderColor,
                         ),
                       ),
                       child: ListView.builder(
@@ -216,7 +286,7 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
                                         method,
                                         style: TextStyle(
                                           fontSize: 13,
-                                          color: isHovered ? Colors.white : (widget.isDark ? AppColors.darkText : AppColors.lightText),
+                                          color: isHovered ? Colors.white : _textColor,
                                         ),
                                       ),
                                     ),
@@ -351,7 +421,7 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
                       children: [
                         _DialogHoverButton(
                           label: 'Cancel',
-                          isDark: widget.isDark,
+                          isDark: _isDarkBase,
                           onTap: () => Navigator.pop(dialogCtx),
                         ),
                         const SizedBox(width: 12),
@@ -384,12 +454,11 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
  
 @override
   Widget build(BuildContext context) {
-    Color bgColor = widget.isDark ? AppColors.darkBg : const Color(0xFFF3F4F6);
-    Color cardBg = widget.isDark ? AppColors.darkCard : AppColors.lightCard;
-    Color textColor = widget.isDark ? AppColors.darkText : AppColors.lightText;
-    Color subTextColor =
-        widget.isDark ? AppColors.darkGreyText : AppColors.lightGreyText;
-    Color borderColor = widget.isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    Color bgColor = _bgColor;
+    Color cardBg = _cardBg;
+    Color textColor = _textColor;
+    Color subTextColor = _subTextColor;
+    Color borderColor = _borderColor;
  
     bool isEraseEnabled = fileItems.isNotEmpty;
  
@@ -448,7 +517,7 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
             margin: EdgeInsets.zero,
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
             decoration: BoxDecoration(
-              color: widget.isDark ? AppColors.darkBg : Colors.white,
+              color: _isDarkBase ? AppColors.darkBg : cardBg,
               border: Border(
                 top: BorderSide(color: borderColor, width: 1.0),
               ),
@@ -463,7 +532,7 @@ class _EraseFilesScreenState extends State<EraseFilesScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: widget.isDark ? Colors.white10 : Colors.white,
+                        color: _isDarkBase ? Colors.white10 : cardBg,
                         borderRadius: BorderRadius.zero,
                         border: Border.all(color: borderColor),
                       ),
@@ -514,14 +583,14 @@ Widget _uploadBox(Color textColor, Color subTextColor, Color borderColor) {
                 _OutlinedHoverButton(
                   icon: Icons.insert_drive_file_outlined,
                   label: 'Add Files',
-                  isDark: widget.isDark,
+                  isDark: _isDarkBase,
                   onTap: _addFiles,
                 ),
                 const SizedBox(width: 12),
                 _OutlinedHoverButton(
                   icon: Icons.folder_outlined,
                   label: 'Add Folder',
-                  isDark: widget.isDark,
+                  isDark: _isDarkBase,
                   onTap: _addFolder,
                 ),
               ],
@@ -535,7 +604,7 @@ Widget _uploadBox(Color textColor, Color subTextColor, Color borderColor) {
   }
  
   Widget _fileTable(Color cardBg, Color textColor, Color subTextColor, Color borderColor) {
-    final dividerColor = widget.isDark ? Colors.white24 : Colors.grey.shade300;
+    final dividerColor = _isDarkBase ? Colors.white24 : Colors.grey.shade300;
  
     return Container(
       decoration: BoxDecoration(

@@ -138,7 +138,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 });
                               },
                             ),
-                            EraseFilesScreen(isDark: isDark),
+                            // [CHANGED] Was `EraseFilesScreen(isDark: isDark)`.
+                            EraseFilesScreen(themeMode: themeMode),
                             // [CHANGED] Was `const VolumeEraserScreen()`.
                             // Now passes themeMode so this page follows
                             // Light/Dark/DSecure/DSecure Light like the
