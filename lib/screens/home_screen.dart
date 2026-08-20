@@ -21,13 +21,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int selectedIndex = 0;
  
-  // CHANGED: bool isDark -> AppThemeMode themeMode.
-  // 4 modes now: light / dark / greenLight (shield icon) / greenDark (flash icon)
   AppThemeMode themeMode = AppThemeMode.light;
  
-  // Backward-compatible helper: existing widgets (Header, EraseFilesScreen,
-  // SettingsScreen) still take a plain bool isDark prop, so we derive it here
-  // without touching those files.
   bool get isDark =>
       themeMode == AppThemeMode.dark || themeMode == AppThemeMode.greenDark;
  
@@ -37,7 +32,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
  
-  // ---- Palette helpers driven by themeMode (used below in build) ----
   Color get _scaffoldBg {
     switch (themeMode) {
       case AppThemeMode.dark:
@@ -116,8 +110,6 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               children: [
                 Header(isDark: isDark),
- 
-                // Content area (Changes dynamically based on sidebar/cards)
                 Expanded(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -135,7 +127,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: IndexedStack(
                           index: selectedIndex,
                           children: [
-                            // Yahan Dashboard, Erase, Volume, Deleted, Scheduler waisa hi hai
                             DashboardScreen(
                               themeMode: themeMode,
                               onThemeToggle: _onThemeToggle,
@@ -148,49 +139,32 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                             ),
                             EraseFilesScreen(isDark: isDark),
-                            const VolumeEraserScreen(),
-                            // CHANGED: ab themeMode pass ho raha hai, taaki
-                            // Deleted Data Eraser page bhi sidebar/Cloud
-                            // Erase/Scheduler ki tarah sabhi 4 themes follow
-                            // kare.
+                            // [CHANGED] Was `const VolumeEraserScreen()`.
+                            // Now passes themeMode so this page follows
+                            // Light/Dark/DSecure/DSecure Light like the
+                            // sidebar, Cloud Erase, Scheduler, Reports do.
+                            VolumeEraserScreen(themeMode: themeMode),
                             DeletedDataEraserScreen(themeMode: themeMode),
-                            // CHANGED: ab poora themeMode pass ho raha hai
-                            // (sirf isDark bool nahi), taaki Scheduler page
-                            // bhi sabhi 4 themes (Light/Dark/DSecure/DSecure
-                            // Light) sahi se follow kare, sidebar ki tarah.
                             SchedulerScreen(themeMode: themeMode),
-                            // CHANGED: ab themeMode pass ho raha hai, taaki
-                            // Reports page bhi sidebar/Cloud Erase ki tarah
-                            // sabhi 4 themes follow kare.
                             ReportsScreen(themeMode: themeMode),
-                            // CHANGED: ab poora themeMode pass ho raha hai
-                            // (sirf isDark bool nahi), taaki Cloud Erase page
-                            // bhi sabhi 4 themes (Light/Dark/DSecure/DSecure
-                            // Light) sahi se follow kare, sidebar ki tarah.
                             CloudEraseScreen(themeMode: themeMode),
-                            // CHANGED: onThemeModeChanged bhi pass ho raha
-                            // hai, taaki Appearance tab ke 4 boxes click
-                            // karne par poore app ka themeMode turant update
-                            // ho jaye (sidebar/dashboard/cloud erase sab).
                             SettingsScreen(
                               themeMode: themeMode,
                               onThemeModeChanged: _onThemeToggle,
-                            ), // Naya Settings screen yahan wired hai
+                            ),
                           ],
                         ),
                       ),
                     ],
                   ),
                 ),
- 
-                // Single, Clean & Fixed Professional Footer (Sab waisa hi hai)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
                   decoration: BoxDecoration(
                     color: _footerBg,
                     border: const Border(
                       top: BorderSide(
-                        color: Color(0xFFD5D5D5), // grey line, matches header/sidebar divider
+                        color: Color(0xFFD5D5D5),
                         width: 1,
                       ),
                     ),
