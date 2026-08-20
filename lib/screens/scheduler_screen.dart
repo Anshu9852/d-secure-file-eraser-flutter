@@ -306,7 +306,7 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0F766E),
+                        backgroundColor: const Color(0xFF14B8A6),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
@@ -379,13 +379,14 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
                                         color: _bodyGreyColor,
                                       ),
                                       const SizedBox(width: 8),
+                                      // [CHANGED] Task Name now uses the exact
+                                      // same normal-weight/grey text style as
+                                      // every other column (Frequency, Next
+                                      // Run, Items, Method, Status), instead
+                                      // of a bold heading color.
                                       Text(
                                         task["name"],
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: _headingColor,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                        style: _rowTextStyle,
                                       ),
                                     ],
                                   ),
@@ -432,7 +433,7 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
                                           fontSize: 11,
                                           fontWeight: FontWeight.w500,
                                           color: isActive
-                                              ? const Color(0xFF0D9488)
+                                              ? const Color(0xFF14B8A6)
                                               : const Color(0xFF4B5563),
                                         ),
                                       ),
@@ -450,13 +451,13 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
                                         tooltip: isActive ? 'Pause Task' : 'Resume Task',
                                         baseIconColor: isActive
                                             ? const Color(0xFF4B5563)
-                                            : const Color(0xFF0D9488),
+                                            : const Color(0xFF14B8A6),
                                         hoverBgColor: isActive
                                             ? const Color(0xFFFFFBEB)
                                             : const Color(0xFFCCFBF1),
                                         hoverIconColor: isActive
                                             ? const Color(0xFFD97706)
-                                            : const Color(0xFF0D9488),
+                                            : const Color(0xFF14B8A6),
                                         onTap: () {
                                           setState(() {
                                             tasks[index]["status"] =
@@ -467,9 +468,9 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
                                       _HoverActionButton(
                                         icon: Icons.flash_on_rounded,
                                         tooltip: 'Run Task Now',
-                                        baseIconColor: const Color(0xFF0D9488),
+                                        baseIconColor: const Color(0xFF14B8A6),
                                         hoverBgColor: const Color(0xFFCCFBF1),
-                                        hoverIconColor: const Color(0xFF0D9488),
+                                        hoverIconColor: const Color(0xFF14B8A6),
                                         onTap: () => _openExecutionDialog(task["name"]),
                                       ),
                                       _HoverActionButton(
@@ -546,7 +547,7 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F766E),
+              backgroundColor: const Color(0xFF14B8A6),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
@@ -787,7 +788,7 @@ class _TaskExecutionDialogState extends State<_TaskExecutionDialog> {
                     ),
                     child: const Icon(
                       Icons.show_chart_rounded,
-                      color: Color(0xFF0D9488),
+                      color: Color(0xFF14B8A6),
                       size: 18,
                     ),
                   ),
@@ -823,7 +824,7 @@ class _TaskExecutionDialogState extends State<_TaskExecutionDialog> {
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF0D9488),
+                          color: Color(0xFF14B8A6),
                         ),
                       ),
                     ],
@@ -835,7 +836,7 @@ class _TaskExecutionDialogState extends State<_TaskExecutionDialog> {
                       value: _progress / 100,
                       minHeight: 6,
                       backgroundColor: const Color(0xFFE0E7FF),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0D9488)),
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF14B8A6)),
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -950,18 +951,18 @@ class _TaskExecutionDialogState extends State<_TaskExecutionDialog> {
         return const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.sync_rounded, size: 13, color: Color(0xFF0D9488)),
+            Icon(Icons.sync_rounded, size: 13, color: Color(0xFF14B8A6)),
             SizedBox(width: 4),
-            Text('Erasing...', style: TextStyle(fontSize: 12, color: Color(0xFF0D9488), fontWeight: FontWeight.w500)),
+            Text('Erasing...', style: TextStyle(fontSize: 12, color: Color(0xFF14B8A6), fontWeight: FontWeight.w500)),
           ],
         );
       case 'erased':
         return const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle_rounded, size: 13, color: Color(0xFF0D9488)),
+            Icon(Icons.check_circle_rounded, size: 13, color: Color(0xFF14B8A6)),
             SizedBox(width: 4),
-            Text('Erased', style: TextStyle(fontSize: 12, color: Color(0xFF0D9488), fontWeight: FontWeight.w500)),
+            Text('Erased', style: TextStyle(fontSize: 12, color: Color(0xFF14B8A6), fontWeight: FontWeight.w500)),
           ],
         );
       case 'stopped':
@@ -1043,9 +1044,9 @@ class _HoverActionButtonState extends State<_HoverActionButton> {
  
 // ==========================================
 // [NEW] HOVERABLE TASK NAME FIELD  (Point 2)
-// Pale green hover background on the "Task Name"
-// text box. Goes back to white on hover-exit,
-// and stays white with teal border while focused.
+// Reduced height, light water-blue hover background,
+// teal-green hover border, teal-green blink cursor.
+// Used by both the Create dialog and the Edit dialog.
 // ==========================================
  
 class _HoverTaskNameField extends StatefulWidget {
@@ -1065,6 +1066,12 @@ class _HoverTaskNameFieldState extends State<_HoverTaskNameField> {
   bool _isHovered = false;
   bool _isFocused = false;
   final FocusNode _focusNode = FocusNode();
+ 
+  // [CHANGED] Consistent teal-green accent (matches the rest of the app),
+  // instead of the darker 0xFF0F766E that read as dark blue.
+  static const Color _teal = Color(0xFF14B8A6);
+  // [CHANGED] Light "water blue" hover fill instead of the pale green.
+  static const Color _waterBlueHover = Color(0xFFEFF6FF);
  
   @override
   void initState() {
@@ -1089,26 +1096,31 @@ class _HoverTaskNameFieldState extends State<_HoverTaskNameField> {
       child: TextField(
         controller: widget.controller,
         focusNode: _focusNode,
+        // [CHANGED] Blinking text cursor is now teal green.
+        cursorColor: _teal,
         style: const TextStyle(fontSize: 13, color: Color(0xFF1F2937)),
         decoration: InputDecoration(
           hintText: widget.hintText,
           hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          // [CHANGED] Reduced vertical padding shrinks the box height.
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           filled: true,
-          fillColor: showHoverFill ? const Color(0xFFF0FDFA) : Colors.white,
+          // [CHANGED] Water-blue hover fill instead of pale green.
+          fillColor: showHoverFill ? _waterBlueHover : Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
+            // [CHANGED] Hover border is teal green.
             borderSide: BorderSide(
-              color: _isHovered ? const Color(0xFF0F766E) : const Color(0xFFD1D5DB),
+              color: _isHovered ? _teal : const Color(0xFFD1D5DB),
             ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: Color(0xFF0F766E)),
+            borderSide: const BorderSide(color: _teal),
           ),
         ),
       ),
@@ -1156,7 +1168,7 @@ class _HoverTargetButtonState extends State<_HoverTargetButton> {
           backgroundColor: _isHovered ? const Color(0xFFF0FDFA) : Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 12),
           side: BorderSide(
-            color: _isHovered ? const Color(0xFF0F766E) : const Color(0xFFD1D5DB),
+            color: _isHovered ? const Color(0xFF14B8A6) : const Color(0xFFD1D5DB),
           ),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         ),
@@ -1190,7 +1202,7 @@ class _HoverCancelButtonState extends State<_HoverCancelButton> {
       child: TextButton(
         onPressed: widget.onTap,
         style: TextButton.styleFrom(
-          backgroundColor: _isHovered ? const Color(0xFF0F766E) : Colors.white,
+          backgroundColor: _isHovered ? const Color(0xFF14B8A6) : Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           side: const BorderSide(color: Color(0xFFD1D5DB)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
@@ -1416,7 +1428,7 @@ class _CreateScheduledTaskDialogState extends State<CreateScheduledTaskDialog> {
                     width: 20,
                     child: Checkbox(
                       value: isRootIntact,
-                      activeColor: const Color(0xFF0F766E),
+                      activeColor: const Color(0xFF14B8A6),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                       onChanged: (val) => setState(() => isRootIntact = val ?? true),
                     ),
@@ -1456,7 +1468,7 @@ class _CreateScheduledTaskDialogState extends State<CreateScheduledTaskDialog> {
                       // dimmed version of the same teal-green button, and turns
                       // full teal-green once every required field is filled in.
                       backgroundColor: _isFormValid
-                          ? const Color(0xFF0F766E)
+                          ? const Color(0xFF14B8A6)
                           : const Color(0xFF99D8CE),
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
@@ -1737,7 +1749,7 @@ class _EditScheduledTaskDialogState extends State<EditScheduledTaskDialog> {
                     width: 24,
                     child: Checkbox(
                       value: isRootIntact,
-                      activeColor: const Color(0xFF0F766E),
+                      activeColor: const Color(0xFF14B8A6),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                       onChanged: (val) => setState(() => isRootIntact = val ?? true),
                     ),
@@ -1771,7 +1783,7 @@ class _EditScheduledTaskDialogState extends State<EditScheduledTaskDialog> {
                   ElevatedButton(
                     onPressed: _saveChanges,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F766E),
+                      backgroundColor: const Color(0xFF14B8A6),
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
@@ -1889,7 +1901,7 @@ class _CustomDropdownState extends State<_CustomDropdown> {
                           // anywhere on the actual content colors the full row.
                           return Container(
                             decoration: BoxDecoration(
-                              color: isHovered ? const Color(0xFF0F766E) : Colors.transparent,
+                              color: isHovered ? const Color(0xFF14B8A6) : Colors.transparent,
                             ),
                             child: Row(
                               children: [
@@ -1918,7 +1930,7 @@ class _CustomDropdownState extends State<_CustomDropdown> {
                                               ),
                                             ),
                                             if (isSelected)
-                                              Icon(Icons.check, size: 14, color: isHovered ? Colors.white : const Color(0xFF0F766E)),
+                                              Icon(Icons.check, size: 14, color: isHovered ? Colors.white : const Color(0xFF14B8A6)),
                                           ],
                                         ),
                                       ),
@@ -1974,7 +1986,7 @@ class _CustomDropdownState extends State<_CustomDropdown> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: _isOpen ? const Color(0xFF0F766E) : const Color(0xFFD1D5DB)),
+            border: Border.all(color: _isOpen ? const Color(0xFF14B8A6) : const Color(0xFFD1D5DB)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2116,7 +2128,7 @@ class _DatePickerFieldWidgetState extends State<_DatePickerFieldWidget> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: _isOpen ? const Color(0xFF0F766E) : const Color(0xFFD1D5DB)),
+            border: Border.all(color: _isOpen ? const Color(0xFF14B8A6) : const Color(0xFFD1D5DB)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2235,7 +2247,7 @@ class _CalendarPopupContentState extends State<_CalendarPopupContent> {
                   child: Container(
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: isSelected || isHovered ? const Color(0xFF0F766E) : Colors.transparent,
+                      color: isSelected || isHovered ? const Color(0xFF14B8A6) : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -2275,14 +2287,14 @@ class _CalendarPopupContentState extends State<_CalendarPopupContent> {
               onTap: () {
                 widget.onSelect(currentYear, currentMonth, 1);
               },
-              child: const Text('Clear', style: TextStyle(fontSize: 12, color: Color(0xFF0F766E), fontWeight: FontWeight.w500)),
+              child: const Text('Clear', style: TextStyle(fontSize: 12, color: Color(0xFF14B8A6), fontWeight: FontWeight.w500)),
             ),
             InkWell(
               onTap: () {
                 DateTime now = DateTime.now();
                 widget.onSelect(now.year, now.month, now.day);
               },
-              child: const Text('Today', style: TextStyle(fontSize: 12, color: Color(0xFF0F766E), fontWeight: FontWeight.w500)),
+              child: const Text('Today', style: TextStyle(fontSize: 12, color: Color(0xFF14B8A6), fontWeight: FontWeight.w500)),
             ),
           ],
         ),
@@ -2313,7 +2325,7 @@ class _CalendarPopupContentState extends State<_CalendarPopupContent> {
             child: Container(
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF0F766E) : (isHovered ? const Color(0xFFE5E7EB) : Colors.transparent),
+                color: isSelected ? const Color(0xFF14B8A6) : (isHovered ? const Color(0xFFE5E7EB) : Colors.transparent),
                 shape: BoxShape.circle,
               ),
               child: Text(
@@ -2461,7 +2473,7 @@ class _TimePickerFieldWidgetState extends State<_TimePickerFieldWidget> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: _isOpen ? const Color(0xFF0F766E) : const Color(0xFFD1D5DB)),
+            border: Border.all(color: _isOpen ? const Color(0xFF14B8A6) : const Color(0xFFD1D5DB)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2561,7 +2573,7 @@ class _TimePickerPopupContentState extends State<_TimePickerPopupContent> {
                             alignment: Alignment.center,
                             padding: const EdgeInsets.symmetric(vertical: 6),
                             decoration: BoxDecoration(
-                              color: isSelected || isHovered ? const Color(0xFF0F766E) : Colors.transparent,
+                              color: isSelected || isHovered ? const Color(0xFF14B8A6) : Colors.transparent,
                               border: const Border(bottom: BorderSide(color: Color(0xFFF3F4F6), width: 0.5)),
                             ),
                             child: Text(
@@ -2608,7 +2620,7 @@ class _TimePickerPopupContentState extends State<_TimePickerPopupContent> {
                             alignment: Alignment.center,
                             padding: const EdgeInsets.symmetric(vertical: 6),
                             decoration: BoxDecoration(
-                              color: isSelected || isHovered ? const Color(0xFF0F766E) : Colors.transparent,
+                              color: isSelected || isHovered ? const Color(0xFF14B8A6) : Colors.transparent,
                               border: const Border(bottom: BorderSide(color: Color(0xFFF3F4F6), width: 0.5)),
                             ),
                             child: Text(
@@ -2650,7 +2662,7 @@ class _TimePickerPopupContentState extends State<_TimePickerPopupContent> {
                           alignment: Alignment.center,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
-                            color: isSelected || isHovered ? const Color(0xFF0F766E) : Colors.transparent,
+                            color: isSelected || isHovered ? const Color(0xFF14B8A6) : Colors.transparent,
                           ),
                           child: Text(
                             item,

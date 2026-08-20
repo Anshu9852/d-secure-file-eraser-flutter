@@ -11,7 +11,8 @@ class VolumeEraserScreen extends StatefulWidget {
 }
  
 class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
-  String selectedVolume = 'D:';
+  // [CHANGED] null means no volume selected → Erase Volume button disabled
+  String? selectedVolume;
   String selectedMethod = 'Zero Fill (1-pass)';
  
   final List<String> erasureMethods = [
@@ -488,7 +489,7 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
       barrierDismissible: true,
       builder: (BuildContext context) {
         return _ConfirmEraserDialogContent(
-          selectedVolume: selectedVolume,
+          selectedVolume: selectedVolume ?? '',
           cardBg: _cardBg,
           titleColor: _titleColor,
           labelColor: _labelColor,
@@ -500,6 +501,9 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
  
   @override
   Widget build(BuildContext context) {
+    // [CHANGED] Button is enabled only when a volume is selected
+    final bool eraseEnabled = selectedVolume != null;
+ 
     return Scaffold(
       backgroundColor: _pageBg,
       body: SafeArea(
@@ -538,13 +542,14 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
                     controller: _scrollController,
                     padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 12.0),
                     children: [
+                      // Warning box — very light grey-blue, reduced height
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 14.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFDCE9F5),
+                          color: const Color(0xFFE8F3FB), // light water grey-blue
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFB3CFE8)),
+                          border: Border.all(color: const Color(0xFFBDD0E8)), // matching border
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -554,29 +559,38 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
                               child: Icon(
                                 Icons.warning_amber_rounded,
                                 color: Color(0xFF14B8A6),
-                                size: 18,
+                                size: 16,
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            Expanded(
+                            const SizedBox(width: 8),
+                            const Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
+                                children: [
                                   Text(
                                     'Warning: Permanent Data Loss',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      color: Color(0xFF64748B),
-                                      fontSize: 12,
+                                      color: Colors.black,
+                                      fontSize: 11.5,
                                     ),
                                   ),
-                                  SizedBox(height: 4),
+                                  SizedBox(height: 6),
                                   Text(
-                                    'Securely delete all data on the chosen volume. Make sure to save anything important first. System files will stay safe, even if the boot volume is selected.',
+                                    'Securely delete all data on the chosen volume. Make sure to save anything important first.',
                                     style: TextStyle(
-                                      color: Color(0xFF334155),
-                                      fontSize: 11,
-                                      height: 1.3,
+                                      color: Colors.black,
+                                      fontSize: 10.5,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                  Text(
+                                    'System files will stay safe, even if the boot volume is selected.',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1.4,
                                     ),
                                   ),
                                 ],
@@ -657,7 +671,8 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Selected: $selectedVolume',
+                    // [CHANGED] Show 'None' when nothing selected
+                    'Selected: ${selectedVolume ?? 'None'}',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -708,11 +723,17 @@ class _VolumeEraserScreenState extends State<VolumeEraserScreen> {
                         ),
                       ),
                       const SizedBox(width: 14),
+                      // [CHANGED] Erase Volume button — disabled (light red)
+                      // until a volume card is clicked, then enabled (red)
                       ElevatedButton.icon(
-                        onPressed: _showConfirmVolumeEraserDialog,
+                        onPressed: eraseEnabled ? _showConfirmVolumeEraserDialog : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFDC2626),
+                          backgroundColor: eraseEnabled
+                              ? const Color(0xFFDC2626)       // enabled — solid red
+                              : const Color(0xFFF8A9A9),      // disabled — light red
                           foregroundColor: Colors.white,
+                          disabledBackgroundColor: const Color(0xFFF8A9A9),
+                          disabledForegroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 10,

@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import '../theme/theme.dart'; // CHANGED: added so this screen can read AppThemeMode + AppColors
+import '../theme/theme.dart';
  
 class DeletedDataEraserScreen extends StatefulWidget {
-  // CHANGED: added themeMode so this screen follows Settings > Appearance
-  // (Light / Dark / DSecure / DSecure Light) the same way the sidebar,
-  // Cloud Erase, and Scheduler screens already do.
   final AppThemeMode themeMode;
   const DeletedDataEraserScreen({Key? key, required this.themeMode}) : super(key: key);
  
@@ -13,7 +10,8 @@ class DeletedDataEraserScreen extends StatefulWidget {
 }
  
 class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
-  int _selectedDriveIndex = 3;
+  // [CHANGED] null = no selection → button disabled
+  int? _selectedDriveIndex;
   String _selectedMethod = 'Zero Fill (1-pass)';
  
   final ScrollController _scrollController = ScrollController();
@@ -91,10 +89,10 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
     'Quick Wipe (1-pass)',
   ];
  
-  // ---- NEW: Theme-aware colors, following the same 4 AppThemeMode values
-  // (Light / Dark / DSecure / DSecure Light) used by Settings > Appearance,
-  // the sidebar, Cloud Erase, and Scheduler — so this page's background/
-  // card/borders/text switch together with the rest of the app. ----
+  // [CHANGED] teal green — consistent color used everywhere
+  static const Color _teal = Color(0xFF14B8A6);
+  static const Color _tealDark = Color(0xFF0F9488);
+ 
   Color get _pageBg {
     switch (widget.themeMode) {
       case AppThemeMode.dark:
@@ -103,7 +101,8 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
       case AppThemeMode.greenLight:
         return AppColors.greenLightBg;
       case AppThemeMode.light:
-        return const Color(0xFFF4F7FB);
+        // [CHANGED] grey background
+        return const Color(0xFFF3F4F6);
     }
   }
  
@@ -158,7 +157,7 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
   }
  
   void _showConfirmDialog() {
-    final driveName = _drives[_selectedDriveIndex]['name'];
+    final driveName = _drives[_selectedDriveIndex!]['name'];
     final TextEditingController confirmController = TextEditingController();
  
     showDialog(
@@ -187,11 +186,7 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
                       children: [
                         Row(
                           children: const [
-                            Icon(
-                              Icons.warning_amber_rounded,
-                              color: Color(0xFFE11D48),
-                              size: 22,
-                            ),
+                            _WarningIconBadge(),
                             SizedBox(width: 10),
                             Text(
                               'Confirm Deleted Data Erasure',
@@ -234,79 +229,47 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
                           TextSpan(text: 'Type '),
                           TextSpan(
                             text: 'ERASE',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B)),
                           ),
                           TextSpan(text: ' to confirm:'),
                         ],
                       ),
                     ),
                     const SizedBox(height: 8),
-                    TextField(
-                      controller: confirmController,
-                      onChanged: (value) {
-                        setStateDialog(() {});
-                      },
-                      cursorColor: const Color(0xFF0F9D94),
-                      style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
-                      decoration: InputDecoration(
-                        hintText: 'ERASE',
-                        hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        filled: true,
-                        fillColor: confirmController.text.isNotEmpty
-                            ? const Color(0xFFE6F4F1)
-                            : Colors.white,
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: const BorderSide(color: Color(0xFF0F9D94), width: 1.5),
-                        ),
-                      ),
-                    ),
+                    // [CHANGED] TextField height reduced + hover water-blue bg
+                    _HoverTextField(confirmController: confirmController, onChanged: () => setStateDialog(() {})),
                     const SizedBox(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            foregroundColor: const Color(0xFF1E293B),
-                            backgroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                              side: const BorderSide(color: Color(0xFFCBD5E1), width: 1),
-                            ),
-                          ),
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text(
-                            'Cancel',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                          ),
-                        ),
+                        // [CHANGED] Cancel button — teal green hover
+                        _CancelButton(onTap: () => Navigator.of(context).pop()),
                         const SizedBox(width: 10),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0F9D94),
+                            // [CHANGED] red instead of teal — solid red once
+                            // "ERASE" is typed, light/pale red while disabled.
+                            backgroundColor: const Color(0xFFDC2626),
                             foregroundColor: Colors.white,
-                            disabledBackgroundColor: const Color(0xFF0F9D94).withOpacity(0.5),
-                            disabledForegroundColor: Colors.white.withOpacity(0.7),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            disabledBackgroundColor:
+                                const Color(0xFFDC2626).withOpacity(0.4),
+                            disabledForegroundColor: Colors.white.withOpacity(0.85),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
                             elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
                             ),
                           ),
                           onPressed: isMatched
-                              ? () {
-                                  Navigator.of(context).pop();
-                                }
+                              ? () => Navigator.of(context).pop()
                               : null,
                           child: const Text(
                             'Confirm',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w500),
                           ),
                         ),
                       ],
@@ -327,8 +290,11 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
     super.dispose();
   }
  
-@override
+  @override
   Widget build(BuildContext context) {
+    // [CHANGED] enabled only when a drive is selected
+    final bool eraseEnabled = _selectedDriveIndex != null;
+ 
     return Scaffold(
       backgroundColor: _pageBg,
       body: Column(
@@ -361,6 +327,7 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
+                    // info box — untouched
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
@@ -374,7 +341,7 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
                         children: const [
                           Icon(
                             Icons.warning_amber_rounded,
-                            color: Color(0xFF0F9D94),
+                            color: Color(0xFF14B8A6),
                             size: 18,
                           ),
                           SizedBox(width: 10),
@@ -417,8 +384,10 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
                             bool isHovered = false;
                             return MouseRegion(
                               cursor: SystemMouseCursors.click,
-                              onEnter: (_) => setHoverState(() => isHovered = true),
-                              onExit: (_) => setHoverState(() => isHovered = false),
+                              onEnter: (_) =>
+                                  setHoverState(() => isHovered = true),
+                              onExit: (_) =>
+                                  setHoverState(() => isHovered = false),
                               child: GestureDetector(
                                 onTap: () {
                                   setState(() {
@@ -432,9 +401,10 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
                                     color: _cardBg,
                                     border: Border.all(
                                       color: (isSelected || isHovered)
-                                          ? const Color(0xFF0F9D94)
+                                          ? _teal
                                           : _cardBorder,
-                                      width: (isSelected || isHovered) ? 1.5 : 1,
+                                      width:
+                                          (isSelected || isHovered) ? 1.5 : 1,
                                     ),
                                     borderRadius: BorderRadius.circular(8),
                                     boxShadow: [
@@ -446,7 +416,8 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
                                     ],
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
@@ -454,11 +425,12 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
                                             padding: const EdgeInsets.all(6),
                                             decoration: BoxDecoration(
                                               color: const Color(0xFFE6F4F1),
-                                              borderRadius: BorderRadius.circular(6),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
                                             ),
                                             child: const Icon(
                                               Icons.sd_storage_outlined,
-                                              color: Color(0xFF0F9D94),
+                                              color: _teal,
                                               size: 20,
                                             ),
                                           ),
@@ -474,17 +446,21 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
                                           if (drive['isBoot'] == true) ...[
                                             const SizedBox(width: 8),
                                             Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                  horizontal: 8, vertical: 2),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 2),
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFE6F4F1),
-                                                borderRadius: BorderRadius.circular(12),
+                                                color:
+                                                    const Color(0xFFE6F4F1),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
                                               child: const Text(
                                                 'Boot Volume',
                                                 style: TextStyle(
                                                   fontSize: 10,
-                                                  color: Color(0xFF0F9D94),
+                                                  color: _teal,
                                                   fontWeight: FontWeight.w600,
                                                 ),
                                               ),
@@ -494,32 +470,67 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
                                       ),
                                       const SizedBox(height: 10),
                                       Padding(
-                                        padding: const EdgeInsets.only(left: 32.0),
+                                        padding:
+                                            const EdgeInsets.only(left: 32.0),
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
                                             Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
-                                                Text('Total Size', style: TextStyle(fontSize: 11, color: _bodyGreyColor)),
+                                                Text('Total Size',
+                                                    style: TextStyle(
+                                                        fontSize: 11,
+                                                        color:
+                                                            _bodyGreyColor)),
                                                 const SizedBox(height: 3),
-                                                Text(drive['totalSize'], style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal, color: _bodyGreyColor)),
+                                                Text(drive['totalSize'],
+                                                    style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                        color:
+                                                            _bodyGreyColor)),
                                               ],
                                             ),
                                             Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
-                                                Text('Free Space', style: TextStyle(fontSize: 11, color: _bodyGreyColor)),
+                                                Text('Free Space',
+                                                    style: TextStyle(
+                                                        fontSize: 11,
+                                                        color:
+                                                            _bodyGreyColor)),
                                                 const SizedBox(height: 3),
-                                                Text(drive['freeSpace'], style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal, color: _bodyGreyColor)),
+                                                Text(drive['freeSpace'],
+                                                    style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                        color:
+                                                            _bodyGreyColor)),
                                               ],
                                             ),
                                             Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
-                                                Text('Used Space', style: TextStyle(fontSize: 11, color: _bodyGreyColor)),
+                                                Text('Used Space',
+                                                    style: TextStyle(
+                                                        fontSize: 11,
+                                                        color:
+                                                            _bodyGreyColor)),
                                                 const SizedBox(height: 3),
-                                                Text(drive['usedSpace'], style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal, color: _bodyGreyColor)),
+                                                Text(drive['usedSpace'],
+                                                    style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                        color:
+                                                            _bodyGreyColor)),
                                               ],
                                             ),
                                             const SizedBox(width: 20),
@@ -528,25 +539,34 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
                                       ),
                                       const SizedBox(height: 14),
                                       Padding(
-                                        padding: const EdgeInsets.only(left: 32.0),
+                                        padding:
+                                            const EdgeInsets.only(left: 32.0),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
                                               children: [
                                                 Text(
                                                   'Free Space',
-                                                  style: TextStyle(fontSize: 10, color: _bodyGreyColor),
+                                                  style: TextStyle(
+                                                      fontSize: 10,
+                                                      color: _bodyGreyColor),
                                                 ),
                                                 Padding(
-                                                  padding: const EdgeInsets.only(right: 20.0),
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          right: 20.0),
                                                   child: Text(
                                                     '${drive['percentage']}%',
                                                     style: TextStyle(
                                                       fontSize: 11,
                                                       color: _bodyGreyColor,
-                                                      fontWeight: FontWeight.w500,
+                                                      fontWeight:
+                                                          FontWeight.w500,
                                                     ),
                                                   ),
                                                 ),
@@ -554,14 +574,19 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
                                             ),
                                             const SizedBox(height: 4),
                                             Padding(
-                                              padding: const EdgeInsets.only(right: 20.0),
+                                              padding: const EdgeInsets.only(
+                                                  right: 20.0),
                                               child: ClipRRect(
-                                                borderRadius: BorderRadius.circular(4),
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
                                                 child: LinearProgressIndicator(
-                                                  value: drive['percentage'] / 100,
-                                                  backgroundColor: const Color(0xFFE2E8F0),
-                                                  valueColor: const AlwaysStoppedAnimation<Color>(
-                                                      Color(0xFF0F9D94)),
+                                                  value: drive['percentage'] /
+                                                      100,
+                                                  backgroundColor:
+                                                      const Color(0xFFE2E8F0),
+                                                  valueColor:
+                                                      const AlwaysStoppedAnimation<
+                                                              Color>(_teal),
                                                   minHeight: 6,
                                                 ),
                                               ),
@@ -584,7 +609,9 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
             ),
           ),
           ErasureBottomBar(
-            selectedDriveName: _drives[_selectedDriveIndex]['name'],
+            selectedDriveName: _selectedDriveIndex != null
+                ? _drives[_selectedDriveIndex!]['name']
+                : 'None',
             selectedMethod: _selectedMethod,
             erasureMethods: _erasureMethods,
             onMethodChanged: (newMethod) {
@@ -592,9 +619,8 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
                 _selectedMethod = newMethod;
               });
             },
-            onErasePressed: _showConfirmDialog,
-            // NEW: theme-aware colors passed down so the bottom bar follows
-            // the same 4 themes as the rest of this page.
+            // [CHANGED] only enable when drive selected
+            onErasePressed: eraseEnabled ? _showConfirmDialog : null,
             barBg: _cardBg,
             borderColor: _cardBorder,
             labelColor: _bodyGreyColor,
@@ -605,17 +631,149 @@ class _DeletedDataEraserScreenState extends State<DeletedDataEraserScreen> {
   }
 }
  
+// [NEW] Light-red circle behind the dialog's warning icon.
+class _WarningIconBadge extends StatelessWidget {
+  const _WarningIconBadge();
+ 
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: const BoxDecoration(
+        color: Color(0xFFFEE2E2),
+        shape: BoxShape.circle,
+      ),
+      child: const Icon(
+        Icons.warning_amber_rounded,
+        color: Color(0xFFE11D48),
+        size: 20,
+      ),
+    );
+  }
+}
+ 
+// [CHANGED] Hover water-blue TextField with reduced height
+class _HoverTextField extends StatefulWidget {
+  final TextEditingController confirmController;
+  final VoidCallback onChanged;
+ 
+  const _HoverTextField({
+    Key? key,
+    required this.confirmController,
+    required this.onChanged,
+  }) : super(key: key);
+ 
+  @override
+  State<_HoverTextField> createState() => _HoverTextFieldState();
+}
+ 
+class _HoverTextFieldState extends State<_HoverTextField> {
+  bool _isHovered = false;
+ 
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        decoration: BoxDecoration(
+          // [CHANGED] water-blue hover background
+          color: _isHovered ? const Color(0xFFE8F4FB) : Colors.white,
+          border: Border.all(
+            color: _isHovered
+                ? const Color(0xFF14B8A6)
+                : const Color(0xFFCBD5E1),
+            width: _isHovered ? 1.4 : 1,
+          ),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: TextField(
+          controller: widget.confirmController,
+          onChanged: (_) => widget.onChanged(),
+          cursorColor: const Color(0xFF14B8A6),
+          style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
+          decoration: InputDecoration(
+            hintText: 'ERASE',
+            hintStyle: const TextStyle(
+                color: Color(0xFF94A3B8), fontSize: 12),
+            isDense: true,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            filled: false,
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+          ),
+        ),
+      ),
+    );
+  }
+}
+ 
+// [CHANGED] Cancel button with teal green hover
+class _CancelButton extends StatefulWidget {
+  final VoidCallback onTap;
+ 
+  const _CancelButton({Key? key, required this.onTap}) : super(key: key);
+ 
+  @override
+  State<_CancelButton> createState() => _CancelButtonState();
+}
+ 
+class _CancelButtonState extends State<_CancelButton> {
+  bool _isHovered = false;
+ 
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+          decoration: BoxDecoration(
+            // [CHANGED] teal green on hover, white when not hovered
+            color: _isHovered ? const Color(0xFF14B8A6) : Colors.white,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: _isHovered
+                  ? const Color(0xFF14B8A6)
+                  : const Color(0xFFCBD5E1),
+            ),
+          ),
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color:
+                  _isHovered ? Colors.white : const Color(0xFF1E293B),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+ 
 class ErasureBottomBar extends StatelessWidget {
   final String selectedDriveName;
   final String selectedMethod;
   final List<String> erasureMethods;
   final ValueChanged<String> onMethodChanged;
-  final VoidCallback onErasePressed;
-  // NEW: theme-aware colors (default to the original light-mode values so
-  // this widget still works if used anywhere without passing them).
+  // [CHANGED] nullable — null = disabled
+  final VoidCallback? onErasePressed;
   final Color barBg;
   final Color borderColor;
   final Color labelColor;
+ 
+  // [CHANGED] teal green consistent color
+  static const Color _teal = Color(0xFF14B8A6);
  
   const ErasureBottomBar({
     Key? key,
@@ -631,6 +789,8 @@ class ErasureBottomBar extends StatelessWidget {
  
   @override
   Widget build(BuildContext context) {
+    final bool enabled = onErasePressed != null;
+ 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
@@ -644,19 +804,13 @@ class ErasureBottomBar extends StatelessWidget {
         children: [
           Text(
             'Selected: $selectedDriveName',
-            style: TextStyle(
-              fontSize: 11,
-              color: labelColor,
-            ),
+            style: TextStyle(fontSize: 11, color: labelColor),
           ),
           Row(
             children: [
               Text(
                 'Method:',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: labelColor,
-                ),
+                style: TextStyle(fontSize: 12, color: labelColor),
               ),
               const SizedBox(width: 4),
               ErasureMethodDropdown(
@@ -665,12 +819,19 @@ class ErasureBottomBar extends StatelessWidget {
                 onMethodChanged: onMethodChanged,
               ),
               const SizedBox(width: 12),
+              // [CHANGED] disabled = light teal, enabled = solid teal
               MouseRegion(
-                cursor: SystemMouseCursors.click,
+                cursor: enabled
+                    ? SystemMouseCursors.click
+                    : SystemMouseCursors.basic,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F9D94),
+                    backgroundColor: enabled
+                        ? _teal
+                        : _teal.withOpacity(0.4), // [CHANGED] light teal when disabled
                     foregroundColor: Colors.white,
+                    disabledBackgroundColor: _teal.withOpacity(0.4),
+                    disabledForegroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 10),
                     shape: RoundedRectangleBorder(
@@ -715,9 +876,25 @@ class ErasureMethodDropdown extends StatelessWidget {
     required this.onMethodChanged,
   }) : super(key: key);
  
+  // [CHANGED] teal green
+  static const Color _teal = Color(0xFF14B8A6);
+ 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<String>(
+    // [CHANGED] Flutter's PopupMenuButton auto-highlights the item matching
+    // `initialValue` with the theme's default focus/highlight grey (and
+    // bolds its text) as soon as the menu opens — even with no mouse hover.
+    // This Theme override strips that default grey/splash/highlight so every
+    // item looks identical at rest; only our own MouseRegion-driven teal
+    // hover in _PopupItemTile ever adds color.
+    return Theme(
+      data: Theme.of(context).copyWith(
+        focusColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        splashColor: Colors.transparent,
+      ),
+      child: PopupMenuButton<String>(
       initialValue: selectedMethod,
       padding: EdgeInsets.zero,
       offset: const Offset(0, -252),
@@ -746,7 +923,8 @@ class ErasureMethodDropdown extends StatelessWidget {
           children: [
             Text(
               selectedMethod,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
+              style: const TextStyle(
+                  fontSize: 12, color: Color(0xFF1E293B)),
             ),
             const SizedBox(width: 4),
             const Icon(
@@ -766,11 +944,13 @@ class ErasureMethodDropdown extends StatelessWidget {
             child: _PopupItemTile(
               method: method,
               isSelected: selectedMethod == method,
+              teal: _teal,
             ),
           );
         }).toList();
       },
       onSelected: onMethodChanged,
+      ),
     );
   }
 }
@@ -778,11 +958,14 @@ class ErasureMethodDropdown extends StatelessWidget {
 class _PopupItemTile extends StatefulWidget {
   final String method;
   final bool isSelected;
+  // [CHANGED] teal passed in for consistency
+  final Color teal;
  
   const _PopupItemTile({
     Key? key,
     required this.method,
     required this.isSelected,
+    required this.teal,
   }) : super(key: key);
  
   @override
@@ -797,12 +980,10 @@ class _PopupItemTileState extends State<_PopupItemTile> {
     Color bgColor = Colors.transparent;
     Color textColor = const Color(0xFF1E293B);
  
-    if (widget.isSelected) {
-      bgColor = const Color(0xFF0F9D94);
+    if (_isHovered) {
+      // sirf hover pe teal green — koi fixed color nahi
+      bgColor = widget.teal;
       textColor = Colors.white;
-    } else if (_isHovered) {
-      bgColor = const Color(0xFF0F9D94).withOpacity(0.15);
-      textColor = const Color(0xFF0F9D94);
     }
  
     return MouseRegion(
@@ -819,20 +1000,18 @@ class _PopupItemTileState extends State<_PopupItemTile> {
             Expanded(
               child: Text(
                 widget.method,
+                // [CHANGED] Same normal weight for every row, selected or
+                // not — the checkmark alone indicates the current selection.
                 style: TextStyle(
                   fontSize: 12,
                   color: textColor,
-                  fontWeight: widget.isSelected ? FontWeight.w500 : FontWeight.normal,
+                  fontWeight: FontWeight.normal,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             if (widget.isSelected)
-              const Icon(
-                Icons.check,
-                size: 14,
-                color: Colors.white,
-              ),
+              const Icon(Icons.check, size: 14, color: Colors.white),
           ],
         ),
       ),
