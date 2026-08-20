@@ -1,9 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import '../theme/theme.dart'; // CHANGED: added so this screen can read AppThemeMode + AppColors
  
 class SchedulerScreen extends StatefulWidget {
-  const SchedulerScreen({Key? key}) : super(key: key);
+  // CHANGED: added themeMode so this screen follows Settings > Appearance
+  // (Light / Dark / DSecure / DSecure Light) the same way the sidebar and
+  // Cloud Erase screen already do.
+  final AppThemeMode themeMode;
+  const SchedulerScreen({Key? key, required this.themeMode}) : super(key: key);
  
   @override
   State<SchedulerScreen> createState() => _SchedulerScreenState();
@@ -54,6 +59,112 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
     super.initState();
     tasks = _initialTasks.map((t) => Map<String, dynamic>.from(t)).toList();
   }
+ 
+  // ---- NEW: Theme-aware colors, following the same 4 AppThemeMode values
+  // (Light / Dark / DSecure / DSecure Light) used by Settings > Appearance,
+  // the sidebar, and Cloud Erase — so this page's background/card/table/
+  // text switch together with the rest of the app. ----
+  Color get _pageBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF0F172A);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightBg;
+      case AppThemeMode.light:
+        return const Color(0xFFF3F4F6);
+    }
+  }
+ 
+  Color get _cardBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF1E293B);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightCard;
+      case AppThemeMode.light:
+        return Colors.white;
+    }
+  }
+ 
+  Color get _borderColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF334155);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightBorder;
+      case AppThemeMode.light:
+        return const Color(0xFFE5E7EB);
+    }
+  }
+ 
+  Color get _headingColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.dark:
+        return Colors.white;
+      case AppThemeMode.greenDark:
+        return AppColors.greenDarkText;
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightText;
+      case AppThemeMode.light:
+        return Colors.black;
+    }
+  }
+ 
+  Color get _bodyGreyColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.dark:
+        return const Color(0xFF94A3B8);
+      case AppThemeMode.greenDark:
+        return AppColors.greenDarkGreyText;
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightGreyText;
+      case AppThemeMode.light:
+        return const Color(0xFF6B7280);
+    }
+  }
+ 
+  Color get _rowTextColor {
+    switch (widget.themeMode) {
+      case AppThemeMode.dark:
+        return const Color(0xFF94A3B8);
+      case AppThemeMode.greenDark:
+        return AppColors.greenDarkGreyText;
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightGreyText;
+      case AppThemeMode.light:
+        return const Color(0xFF374151);
+    }
+  }
+ 
+  Color get _tableHeaderBg {
+    switch (widget.themeMode) {
+      case AppThemeMode.dark:
+      case AppThemeMode.greenDark:
+        return const Color(0xFF243044);
+      case AppThemeMode.greenLight:
+        return AppColors.greenLightBorder.withOpacity(0.35);
+      case AppThemeMode.light:
+        return const Color(0xFFF9FAFB);
+    }
+  }
+ 
+  // CHANGED: was `static const TextStyle _headerStyle` — now a getter so it
+  // can follow widget.themeMode (used further down in build()).
+  TextStyle get _headerStyle => TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: _bodyGreyColor,
+      );
+ 
+  // CHANGED: was `static const TextStyle _rowTextStyle` — now a getter so it
+  // can follow widget.themeMode (used further down in build()).
+  TextStyle get _rowTextStyle => TextStyle(
+        fontSize: 12,
+        color: _rowTextColor,
+      );
  
   // [NEW] Opens the "Delete Task" confirmation popup before actually
   // removing a task from the list.
@@ -116,7 +227,7 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F4F6),
+      backgroundColor: _pageBg,
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -128,21 +239,21 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       'Scheduler',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.normal,
-                        color: Colors.black,
+                        color: _headingColor,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       'Automate erasure tasks on a recurring schedule',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Color(0xFF6B7280),
+                        color: _bodyGreyColor,
                       ),
                     ),
                   ],
@@ -170,14 +281,14 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                            border: Border.all(color: _borderColor),
                             borderRadius: BorderRadius.circular(6),
-                            color: Colors.white,
+                            color: _cardBg,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.refresh_rounded,
                             size: 18,
-                            color: Color(0xFF4B5563),
+                            color: _bodyGreyColor,
                           ),
                         ),
                       ),
@@ -211,9 +322,9 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: _cardBg,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                  border: Border.all(color: _borderColor),
                 ),
                 child: tasks.isEmpty
                     ? _buildEmptyState()
@@ -221,18 +332,18 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF9FAFB),
-                        borderRadius: BorderRadius.only(
+                      decoration: BoxDecoration(
+                        color: _tableHeaderBg,
+                        borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(8),
                           topRight: Radius.circular(8),
                         ),
                         border: Border(
-                          bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                          bottom: BorderSide(color: _borderColor),
                         ),
                       ),
                       child: Row(
-                        children: const [
+                        children: [
                           Expanded(flex: 3, child: Text('Task Name', style: _headerStyle)),
                           Expanded(flex: 1, child: Text('Frequency', style: _headerStyle)),
                           Expanded(flex: 2, child: Text('Next Run', style: _headerStyle)),
@@ -246,9 +357,9 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
                     Expanded(
                       child: ListView.separated(
                         itemCount: tasks.length,
-                        separatorBuilder: (context, index) => const Divider(
+                        separatorBuilder: (context, index) => Divider(
                           height: 1,
-                          color: Color(0xFFE5E7EB),
+                          color: _borderColor,
                         ),
                         itemBuilder: (context, index) {
                           final task = tasks[index];
@@ -262,17 +373,17 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
                                   flex: 3,
                                   child: Row(
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.access_time_rounded,
                                         size: 16,
-                                        color: Color(0xFF6B7280),
+                                        color: _bodyGreyColor,
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
                                         task["name"],
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 12,
-                                          color: Color(0xFF1F2937),
+                                          color: _headingColor,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -409,18 +520,18 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
             height: 64,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFD1D5DB), width: 1.5),
+              border: Border.all(color: _borderColor, width: 1.5),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.access_time_rounded,
               size: 28,
-              color: Color(0xFF9CA3AF),
+              color: _bodyGreyColor,
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'No scheduled tasks yet',
-            style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+            style: TextStyle(fontSize: 14, color: _bodyGreyColor),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
@@ -447,17 +558,6 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
       ),
     );
   }
- 
-  static const TextStyle _headerStyle = TextStyle(
-    fontSize: 11,
-    fontWeight: FontWeight.w600,
-    color: Color(0xFF4B5563),
-  );
- 
-  static const TextStyle _rowTextStyle = TextStyle(
-    fontSize: 12,
-    color: Color(0xFF374151),
-  );
 }
  
 // ==========================================
