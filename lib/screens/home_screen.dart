@@ -149,7 +149,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             EraseFilesScreen(isDark: isDark),
                             const VolumeEraserScreen(),
-                            const DeletedDataEraserScreen(),
+                            // CHANGED: ab themeMode pass ho raha hai, taaki
+                            // Deleted Data Eraser page bhi sidebar/Cloud
+                            // Erase/Scheduler ki tarah sabhi 4 themes follow
+                            // kare.
+                            DeletedDataEraserScreen(themeMode: themeMode),
                             // CHANGED: ab poora themeMode pass ho raha hai
                             // (sirf isDark bool nahi), taaki Scheduler page
                             // bhi sabhi 4 themes (Light/Dark/DSecure/DSecure
